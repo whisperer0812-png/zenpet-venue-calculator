@@ -144,7 +144,7 @@ tr:hover td{background:var(--bg)}
   <div class="s-sec">
     <div class="s-lbl">課程排班</div>
     <div class="sf"><div class="sh"><span class="sl">每師每日堂數</span><span class="sv" id="vD">2 堂</span></div>
-      <input type="range" min=".5" max="6" step=".5" value="2" oninput="sync('D',this.value,v=>v+' 堂')"></div>
+      <input type="range" min="0" max="6" step=".5" value="2" oninput="sync('D',this.value,v=>v+' 堂')"></div>
     <div class="sf"><div class="sh"><span class="sl">月工作天數</span><span class="sv" id="vW">22 天</span></div>
       <input type="range" min="15" max="30" step="1" value="22" oninput="sync('W',this.value,v=>v+' 天')"></div>
     <div class="sf"><div class="sh"><span class="sl">每堂收費</span><span class="sv" id="vRv">$3,500</span></div>
