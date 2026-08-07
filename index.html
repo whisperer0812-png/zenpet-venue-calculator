@@ -135,6 +135,7 @@ tr:hover td{background:var(--bg)}
   <div class="s-sec">
     <div class="s-lbl">訓練師人數</div>
     <div class="tog-group">
+      <button class="tog"    id="btn2" onclick="setT(2)">二師</button>
       <button class="tog on" id="btn3" onclick="setT(3)">三師</button>
       <button class="tog"    id="btn4" onclick="setT(4)">四師</button>
       <button class="tog"    id="btn5" onclick="setT(5)">五師</button>
@@ -159,7 +160,9 @@ tr:hover td{background:var(--bg)}
       <input type="range" min="30000" max="150000" step="1000" value="70000" oninput="sync('Sl',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="sf"><div class="sh"><span class="sl">其他月成本（水電費...等）</span><span class="sv" id="vOt">$20,000</span></div>
       <input type="range" min="0" max="100000" step="1000" value="20000" oninput="sync('Ot',this.value,v=>'$'+Number(v).toLocaleString())"></div>
-    <div class="sf"><div class="sh"><span class="sl">年度額外固定成本 <span class="dc-badge">NEW</span></span><span class="sv" id="vAnn">$0</span></div>
+    <div class="sf"><div class="sh"><span class="sl">其他人事費</span><span class="sv" id="vHr">$0</span></div>
+      <input type="range" min="0" max="200000" step="5000" value="0" oninput="sync('Hr',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">年度額外固定成本（進修費、邀請講師費、場館道具添購）</span><span class="sv" id="vAnn">$0</span></div>
       <input type="range" min="0" max="1000000" step="10000" value="0" oninput="sync('Ann',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="hint-box" id="hintAnn">月均年度成本：$0（÷12）</div>
   </div>
@@ -168,20 +171,26 @@ tr:hover td{background:var(--bg)}
     <div class="s-lbl">前期投入 &amp; 攤提</div>
     <div class="sf"><div class="sh"><span class="sl">裝潢費（一次性）</span><span class="sv" id="vRen">$2,500,000</span></div>
       <input type="range" min="0" max="5000000" step="50000" value="2500000" oninput="sync('Ren',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">道具、制服添購費...等</span><span class="sv" id="vEqp">$200,000</span></div>
+      <input type="range" min="0" max="1000000" step="10000" value="200000" oninput="sync('Eqp',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="sf"><div class="sh"><span class="sl">押金（月數）</span><span class="sv" id="vDep">2 個月</span></div>
       <input type="range" min="0" max="6" step="1" value="2" oninput="sync('Dep',this.value,v=>v+' 個月')"></div>
     <div class="sf"><div class="sh"><span class="sl">簽約年限</span><span class="sv" id="vYr">5 年</span></div>
       <input type="range" min="1" max="10" step="1" value="5" oninput="sync('Yr',this.value,v=>v+' 年')"></div>
-    <div class="hint-box" id="hintAmort">月攤提裝潢：計算中</div>
+    <div class="hint-box" id="hintAmort">月攤提前期費用：計算中</div>
   </div>
 
   <div class="s-sec">
-    <div class="s-lbl" style="border-top:2px solid var(--acc);padding-top:.5rem;color:var(--acc)">場館安親（額外收益）</div>
+    <div class="s-lbl" style="border-top:2px solid var(--acc);padding-top:.5rem;color:var(--acc)">額外收益</div>
     <div class="sf"><div class="sh"><span class="sl">每週有幾隻狗狗安親</span><span class="sv" id="vDcN">0 隻/週</span></div>
       <input type="range" min="0" max="40" step="1" value="0" oninput="sync('DcN',parseInt(this.value),v=>v+' 隻/週')"></div>
     <div class="sf"><div class="sh"><span class="sl">安親費／隻／次</span><span class="sv" id="vDcF">$4,000</span></div>
       <input type="range" min="500" max="8000" step="100" value="4000" oninput="sync('DcF',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="hint-box" id="hintDc">安親月收：計算中</div>
+    <div class="sf"><div class="sh"><span class="sl">活動或講座月收益</span><span class="sv" id="vEv">$0</span></div>
+      <input type="range" min="0" max="200000" step="5000" value="0" oninput="sync('Ev',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">補助費用／月（政府補助、特殊項目）</span><span class="sv" id="vSub">$0</span></div>
+      <input type="range" min="0" max="100000" step="1000" value="0" oninput="sync('Sub',this.value,v=>'$'+Number(v).toLocaleString())"></div>
   </div>
 </aside>
 
@@ -242,7 +251,7 @@ tr:hover td{background:var(--bg)}
     <div id="panelCmp" style="display:none"><div class="cmp2" id="cmpCols"></div><div class="delta-box" id="deltaBox"></div></div>
     <div id="panelTbl" style="display:none">
       <div class="tbl-wrap"><table><thead><tr>
-        <th>月堂數</th><th>月訓練收入</th><th>三師每人/日</th><th>三師淨利</th><th>四師每人/日</th><th>四師淨利</th><th>五師每人/日</th><th>五師淨利</th>
+        <th>月堂數</th><th>月訓練收入</th><th>二師每人/日</th><th>二師淨利</th><th>三師每人/日</th><th>三師淨利</th><th>四師每人/日</th><th>四師淨利</th><th>五師每人/日</th><th>五師淨利</th>
       </tr></thead><tbody id="tblBody"></tbody></table></div>
       <div class="note">固定成本含月攤提裝潢、年度均攤、安親收益已計入。藍底列為三師損益平衡點。</div>
     </div>
@@ -284,7 +293,7 @@ function showApp(){
 
 // ── State ─────────────────────────────────────────────────────────
 var T=3, barCh=null, lineCh=null;
-var V={D:2,W:22,Rv:3500,Rt:150000,Sl:70000,Ot:20000,Ann:0,Ren:2500000,Dep:2,Yr:5,DcN:0,DcF:4000};
+var V={D:2,W:22,Rv:3500,Rt:150000,Sl:70000,Ot:20000,Hr:0,Ann:0,Ren:2500000,Eqp:200000,Dep:2,Yr:5,DcN:0,DcF:4000,Sub:0,Ev:0};
 var S={fN:0,Rv:3000,sessions:0,beN:0,dcRev:0,fEff:0,beEff:0};
 
 function el(id){return document.getElementById(id);}
@@ -292,11 +301,12 @@ function fmtN(n){return Math.round(n).toLocaleString('zh-TW');}
 function fmtP(n){return(n>=0?'+ ':'- ')+'$'+fmtN(Math.abs(n));}
 function pc(n){return n>0?'pos':n<0?'neg':'';}
 function dk(){var th=document.documentElement.dataset.theme;return th==='dark'||(!th&&matchMedia('(prefers-color-scheme:dark)').matches);}
-function amort(){return V.Ren/(V.Yr*12);}
+function amort(){return (V.Ren+V.Eqp)/(V.Yr*12);}
 function annMonth(){return V.Ann/12;}
-function fixed(t){return t*V.Sl+V.Rt+V.Ot+amort()+annMonth();}
+function fixed(t){return t*V.Sl+V.Rt+V.Ot+V.Hr+amort()+annMonth();}
 function dcRev(){return V.DcN*V.DcF*Math.round(V.W/5);}
-function fixedEff(t){return Math.max(0,fixed(t)-dcRev());}
+function otherRev(){return dcRev()+V.Sub+V.Ev;}
+function fixedEff(t){return Math.max(0,fixed(t)-otherRev());}
 function beCalc(t){return Math.ceil(fixed(t)/V.Rv);}
 function beEffCalc(t){return Math.ceil(fixedEff(t)/V.Rv);}
 
@@ -306,7 +316,7 @@ function sync(key,val,fmtFn){
   if(key==='Ann')el('hintAnn').textContent='月均年度成本：$'+fmtN(V.Ann/12)+'（÷12）';
   update();
 }
-function setT(n){T=n;[3,4,5].forEach(function(i){el('btn'+i).classList.toggle('on',n===i);});update();}
+function setT(n){T=n;[2,3,4,5].forEach(function(i){el('btn'+i).classList.toggle('on',n===i);});update();}
 
 // ── Palette (ZenPet) ─────────────────────────────────────────────
 function pal(){
@@ -476,11 +486,13 @@ function renderBar(){
 var LINE_ROWS=[80,100,120,140,160,176,198,220,264,300,352];
 
 function renderLine(){
-  var p=pal(),f3=fixed(3),f4=fixed(4),f5=fixed(5),rv=V.Rv,dc=dcRev();
-  var pd3=LINE_ROWS.map(function(s){return s*rv+dc-f3;});
-  var pd4=LINE_ROWS.map(function(s){return s*rv+dc-f4;});
-  var pd5=LINE_ROWS.map(function(s){return s*rv+dc-f5;});
+  var p=pal(),f2=fixed(2),f3=fixed(3),f4=fixed(4),f5=fixed(5),rv=V.Rv,or=otherRev();
+  var pd2=LINE_ROWS.map(function(s){return s*rv+or-f2;});
+  var pd3=LINE_ROWS.map(function(s){return s*rv+or-f3;});
+  var pd4=LINE_ROWS.map(function(s){return s*rv+or-f4;});
+  var pd5=LINE_ROWS.map(function(s){return s*rv+or-f5;});
   var orange=dk()?'#E7AD88':'#C27B40';
+  var purple=dk()?'#B59BEF':'#7C5CBF';
 
   if(!lineCh){
     lineCh=new Chart(el('lineChart'),{
@@ -488,6 +500,8 @@ function renderLine(){
       data:{
         labels:LINE_ROWS.map(function(s){return s+'堂';}),
         datasets:[
+          {label:'二師月淨利',data:pd2,borderColor:purple,backgroundColor:'transparent',
+           fill:false,borderWidth:2,borderDash:[2,3],pointRadius:3,pointBackgroundColor:purple,tension:.35},
           {label:'三師月淨利',data:pd3,borderColor:p.blue,backgroundColor:p.lineFill,
            fill:'+1',borderWidth:2.5,pointRadius:4,pointBackgroundColor:p.blue,tension:.35},
           {label:'四師月淨利',data:pd4,borderColor:p.green,backgroundColor:'transparent',
@@ -506,16 +520,18 @@ function renderLine(){
       }
     });
   }else{
-    var og=dk()?'#E7AD88':'#C27B40';
-    lineCh.data.datasets[0].data=pd3;lineCh.data.datasets[0].borderColor=p.blue;lineCh.data.datasets[0].backgroundColor=p.lineFill;lineCh.data.datasets[0].pointBackgroundColor=p.blue;
-    lineCh.data.datasets[1].data=pd4;lineCh.data.datasets[1].borderColor=p.green;lineCh.data.datasets[1].pointBackgroundColor=p.green;
-    lineCh.data.datasets[2].data=pd5;lineCh.data.datasets[2].borderColor=og;lineCh.data.datasets[2].pointBackgroundColor=og;
+    var og=dk()?'#E7AD88':'#C27B40';var pu=dk()?'#B59BEF':'#7C5CBF';
+    lineCh.data.datasets[0].data=pd2;lineCh.data.datasets[0].borderColor=pu;lineCh.data.datasets[0].pointBackgroundColor=pu;
+    lineCh.data.datasets[1].data=pd3;lineCh.data.datasets[1].borderColor=p.blue;lineCh.data.datasets[1].backgroundColor=p.lineFill;lineCh.data.datasets[1].pointBackgroundColor=p.blue;
+    lineCh.data.datasets[2].data=pd4;lineCh.data.datasets[2].borderColor=p.green;lineCh.data.datasets[2].pointBackgroundColor=p.green;
+    lineCh.data.datasets[3].data=pd5;lineCh.data.datasets[3].borderColor=og;lineCh.data.datasets[3].pointBackgroundColor=og;
     lineCh.options.scales.x.ticks.color=p.tc;lineCh.options.scales.y.ticks.color=p.tc;
     lineCh.options.scales.x.grid.color=p.gc;lineCh.options.scales.y.grid.color=p.gc;
     lineCh.update('none');
   }
-  var og2=dk()?'#E7AD88':'#C27B40';
+  var og2=dk()?'#E7AD88':'#C27B40';var pu2=dk()?'#B59BEF':'#7C5CBF';
   el('lineLeg').innerHTML=
+    '<span><span class="leg-dot" style="background:'+pu2+'"></span>二師月淨利</span>'+
     '<span><span class="leg-dot" style="background:'+p.blue+'"></span>三師月淨利</span>'+
     '<span><span class="leg-dot" style="background:'+p.green+'"></span>四師月淨利</span>'+
     '<span><span class="leg-dot" style="background:'+og2+'"></span>五師月淨利</span>';
@@ -525,33 +541,33 @@ function renderLine(){
 function update(){
   if(!_user)return;
   var rv=V.Rv,days=V.W,perDay=V.D;
-  var am=amort(),ann=annMonth(),fN=fixed(T),f3=fixed(3),f4=fixed(4),f5=fixed(5);
-  var dc=dcRev(),fEff=fixedEff(T),beN=beCalc(T),beEff=beEffCalc(T);
+  var am=amort(),ann=annMonth(),fN=fixed(T),f3=fixed(3),f4=fixed(4),f5=fixed(5),f2=fixed(2);
+  var dc=dcRev(),or=otherRev(),fEff=fixedEff(T),beN=beCalc(T),beEff=beEffCalc(T);
   var sessions=Math.round(T*perDay*days);
-  var revenue=sessions*rv,prf=revenue+dc-fN;
-  var b3=beCalc(3),b4=beCalc(4),b3eff=beEffCalc(3);
-  var maxCap=T*4*days,totalInvest=V.Ren+V.Dep*V.Rt+V.Rt;
+  var revenue=sessions*rv,prf=revenue+or-fN;
+  var b2=beCalc(2),b3=beCalc(3),b4=beCalc(4),b3eff=beEffCalc(3);
+  var maxCap=T*4*days,totalInvest=V.Ren+V.Eqp+V.Dep*V.Rt+V.Rt;
 
   S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,fEff:fEff};
 
-  el('hintAmort').textContent='月攤提裝潢：$'+fmtN(am)+' /月';
-  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻/週 × $'+fmtN(V.DcF)+' × '+Math.round(days/5)+'週）';
+  el('hintAmort').textContent='月攤提前期費用：$'+fmtN(am)+' /月（裝潢＋道具）';
+  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻/週 × $'+fmtN(V.DcF)+' × '+Math.round(days/5)+'週）'+(V.Ev>0?' ｜ 活動 $'+fmtN(V.Ev):'')+(V.Sub>0?' ｜ 補助 $'+fmtN(V.Sub):'');
   if(el('hintAnn'))el('hintAnn').textContent='月均年度成本：$'+fmtN(ann)+'（÷12）';
 
   el('ivTotal').textContent='$'+fmtN(totalInvest);
   el('ivAmort').textContent='$'+fmtN(am)+' /月';
   el('ivSub').textContent='$'+fmtN(V.Ren)+' ÷ '+V.Yr+'年 ÷ 12';
   el('ivFixed').textContent='$'+fmtN(fN);
-  el('ivDc').textContent='+ $'+fmtN(dc)+' /月';
+  el('ivDc').textContent='+ $'+fmtN(or)+' /月';
 
   el('dcEffFixed').textContent='$'+fmtN(fEff)+' /月';
   el('dcBe').textContent=beEff+' 堂 /月';
   var saved=beN-beEff;
   el('dcSave').textContent=saved>0?'少 '+saved+' 堂':'與訓練相同';
 
-  el('kBe').textContent=beN+' 堂';el('kBeS').textContent='含安親後僅需 '+beEff+' 堂';
+  el('kBe').textContent=beN+' 堂';el('kBeS').textContent='含額外收益後僅需 '+beEff+' 堂';
   el('kPr').textContent=fmtP(prf);el('kPr').className='kpi-val '+pc(prf);
-  el('kPrS').textContent='訓練 $'+fmtN(revenue)+' + 安親 $'+fmtN(dc);
+  el('kPrS').textContent='訓練 $'+fmtN(revenue)+' + 額外 $'+fmtN(or);
   if(prf>0){
     var rec=Math.ceil(totalInvest/prf);
     el('kRec').textContent=rec+' 個月';el('kRec').className='kpi-val '+(rec<=36?'pos':rec<=60?'warn':'neg');
@@ -565,7 +581,7 @@ function update(){
   // scenarios
   el('scGrid').innerHTML=[[1,'低量','t-red'],[2,'中量','t-grn'],[3,'滿載','t-blu']].map(function(x){
     var d2=x[0],lbl=x[1],tc=x[2];
-    var s=Math.round(T*d2*days),r=s*rv,p2=r+dc-fN,hi=d2===Math.round(perDay);
+    var s=Math.round(T*d2*days),r=s*rv,p2=r+or-fN,hi=d2===Math.round(perDay);
     return '<div class="sc'+(hi?' hi':'')+'"><span class="sc-tag '+tc+'">'+lbl+'</span>'+
       '<div class="sc-day">每師每日 '+d2+' 堂 × '+days+' 天</div>'+
       '<div class="sc-n">'+s+' <span class="sc-unit">堂/月</span></div>'+
@@ -574,10 +590,10 @@ function update(){
   }).join('');
 
   // compare
-  el('cmpCols').style.gridTemplateColumns='repeat(3,1fr)';
-  el('cmpCols').innerHTML=[[3,'三師',false],[4,'四師',true],[5,'五師',false]].map(function(x){
+  el('cmpCols').style.gridTemplateColumns='repeat(4,1fr)';
+  el('cmpCols').innerHTML=[[2,'二師',false],[3,'三師',false],[4,'四師',true],[5,'五師',false]].map(function(x){
     var t=x[0],title=x[1],hi=x[2];
-    var f=fixed(t),bx=beCalc(t),bxEff=beEffCalc(t),d2s=Math.round(t*2*days),p2=d2s*rv+dc-f;
+    var f=fixed(t),bx=beCalc(t),bxEff=beEffCalc(t),d2s=Math.round(t*2*days),p2=d2s*rv+or-f;
     var recX=p2>0?Math.ceil(totalInvest/p2):null;
     return '<div class="cmp-col'+(hi?' hi':'')+'">'+
       '<div class="cmp-col-title"'+(hi?' style="color:var(--acc)"':'')+'>'+title+'</div>'+
@@ -590,17 +606,19 @@ function update(){
   }).join('');
   var b5=beCalc(5);
   el('deltaBox').innerHTML=
+    '<div class="delta-row"><span>三師 vs 二師：額外固定成本</span><span class="delta-val">+ $'+fmtN(f3-f2)+' / 月，損益平衡多 '+(b3-b2)+' 堂</span></div>'+
     '<div class="delta-row"><span>四師 vs 三師：額外固定成本</span><span class="delta-val">+ $'+fmtN(f4-f3)+' / 月，損益平衡多 '+(b4-b3)+' 堂</span></div>'+
     '<div class="delta-row"><span>五師 vs 四師：額外固定成本</span><span class="delta-val">+ $'+fmtN(f5-f4)+' / 月，損益平衡多 '+(b5-b4)+' 堂</span></div>'+
-    '<div class="delta-row"><span>安親收益降低損益平衡</span><span class="delta-val pos">- '+(beN-beEff)+' 堂</span></div>';
+    '<div class="delta-row"><span>額外收益降低損益平衡</span><span class="delta-val pos">- '+(beN-beEff)+' 堂</span></div>';
 
   // table
   var rows2=[60,80,100,120,140,160,180,200,240,280,320,360];
   el('tblBody').innerHTML=rows2.map(function(s){
-    var r=s*rv,p3=r+dc-f3,p4=r+dc-f4,p5=r+dc-f5;
-    var d3pd=(s/3/days).toFixed(1),d4pd=(s/4/days).toFixed(1),d5pd=(s/5/days).toFixed(1);
+    var r=s*rv,p2t=r+or-f2,p3=r+or-f3,p4=r+or-f4,p5=r+or-f5;
+    var d2pd=(s/2/days).toFixed(1),d3pd=(s/3/days).toFixed(1),d4pd=(s/4/days).toFixed(1),d5pd=(s/5/days).toFixed(1);
     var cls=(s>=b3eff-5&&s<=b3eff+5)?'be-row':'';
     return '<tr class="'+cls+'"><td>'+s+' 堂</td><td>$'+fmtN(r)+'</td>'+
+      '<td class="dim">'+d2pd+' 堂</td><td class="'+pc(p2t)+'">'+fmtP(p2t)+'</td>'+
       '<td class="dim">'+d3pd+' 堂</td><td class="'+pc(p3)+'">'+fmtP(p3)+'</td>'+
       '<td class="dim">'+d4pd+' 堂</td><td class="'+pc(p4)+'">'+fmtP(p4)+'</td>'+
       '<td class="dim">'+d5pd+' 堂</td><td class="'+pc(p5)+'">'+fmtP(p5)+'</td></tr>';
