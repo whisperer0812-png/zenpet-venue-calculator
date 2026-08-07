@@ -1,7 +1,7 @@
 
 <title>ZENPET 場館成本效益試算</title>
 <style>
-/* ZenPet color system — synced from zenpet-train-ops.netlify.app */
+/* ZenPet color system — fixed light mode, matches zenpet-train-ops.netlify.app */
 :root{
   --bg:#F7F5F0;--surf:#FFFFFF;--surf2:#EDE9E1;
   --acc:#436161;--acc-l:#DFF0EE;
@@ -10,13 +10,12 @@
   --bdr:#E6E2D9;--r:10px
 }
 @media(prefers-color-scheme:dark){:root{
-  --bg:#182525;--surf:#212E2E;--surf2:#182525;
-  --acc:#4A7C7E;--acc-l:#1C3535;
-  --text:#E8E4DC;--text2:#8BA09E;--text3:#4A5E5C;
-  --pos:#5BAF7A;--neg:#D4735A;--warn:#D4964A;--bdr:#2E4040
+  --bg:#F7F5F0;--surf:#FFFFFF;--surf2:#EDE9E1;
+  --acc:#436161;--acc-l:#DFF0EE;
+  --text:#2C2C2C;--text2:#6F7573;--text3:#9BAAAA;
+  --pos:#3F7D5A;--neg:#B0432C;--warn:#B0742A;
+  --bdr:#E6E2D9
 }}
-:root[data-theme=light]{--bg:#F7F5F0;--surf:#FFFFFF;--surf2:#EDE9E1;--acc:#436161;--acc-l:#DFF0EE;--text:#2C2C2C;--text2:#6F7573;--text3:#9BAAAA;--pos:#3F7D5A;--neg:#B0432C;--warn:#B0742A;--bdr:#E6E2D9}
-:root[data-theme=dark]{--bg:#182525;--surf:#212E2E;--surf2:#182525;--acc:#4A7C7E;--acc-l:#1C3535;--text:#E8E4DC;--text2:#8BA09E;--text3:#4A5E5C;--pos:#5BAF7A;--neg:#D4735A;--warn:#D4964A;--bdr:#2E4040}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
 
@@ -83,8 +82,6 @@ input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;bac
 .sc.hi{border-color:var(--acc);border-width:2px}
 .sc-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:6px}
 .t-red{background:#FEE2E2;color:#991B1B}.t-grn{background:#D1FAE5;color:#065F46}.t-blu{background:#DBEAFE;color:#1E40AF}
-:root[data-theme=dark] .t-red{background:#3B1515;color:#FCA5A5}:root[data-theme=dark] .t-grn{background:#0D2E1C;color:#6EE7B7}:root[data-theme=dark] .t-blu{background:#102040;color:#93C5FD}
-@media(prefers-color-scheme:dark){.t-red{background:#3B1515;color:#FCA5A5}.t-grn{background:#0D2E1C;color:#6EE7B7}.t-blu{background:#102040;color:#93C5FD}}
 .sc-day{font-size:11px;color:var(--text3);margin-bottom:1px}
 .sc-n{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
 .sc-unit{font-size:11px;color:var(--text3)}.sc-rev{font-size:12px;color:var(--text2);margin-top:3px;font-variant-numeric:tabular-nums}
