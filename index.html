@@ -1,5 +1,5 @@
 
-<title>場館成本效益試算</title>
+<title>ZENPET 場館成本效益試算</title>
 <style>
 /* ZenPet color system — synced from zenpet-train-ops.netlify.app */
 :root{
@@ -124,10 +124,9 @@ tr:hover td{background:var(--bg)}
 </div>
 
 <header id="appHeader" style="display:none">
-  <div><div class="h-title">場館成本效益試算</div><div class="h-sub">拖動滑桿，三張圖表即時更新</div></div>
+  <div><div class="h-title">ZENPET 場館成本效益試算</div><div class="h-sub">拖動滑桿，三張圖表即時更新</div></div>
   <div class="h-right">
     <span class="user-tag" id="userTag"></span>
-    <button class="theme-btn" onclick="toggleTheme()">深色 / 淺色</button>
   </div>
 </header>
 
@@ -158,7 +157,7 @@ tr:hover td{background:var(--bg)}
       <input type="range" min="30000" max="400000" step="5000" value="150000" oninput="sync('Rt',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="sf"><div class="sh"><span class="sl">每位訓練師月薪</span><span class="sv" id="vSl">$70,000</span></div>
       <input type="range" min="30000" max="150000" step="1000" value="70000" oninput="sync('Sl',this.value,v=>'$'+Number(v).toLocaleString())"></div>
-    <div class="sf"><div class="sh"><span class="sl">其他月成本</span><span class="sv" id="vOt">$20,000</span></div>
+    <div class="sf"><div class="sh"><span class="sl">其他月成本（水電費...等）</span><span class="sv" id="vOt">$20,000</span></div>
       <input type="range" min="0" max="100000" step="1000" value="20000" oninput="sync('Ot',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="sf"><div class="sh"><span class="sl">年度額外固定成本 <span class="dc-badge">NEW</span></span><span class="sv" id="vAnn">$0</span></div>
       <input type="range" min="0" max="1000000" step="10000" value="0" oninput="sync('Ann',this.value,v=>'$'+Number(v).toLocaleString())"></div>
@@ -178,9 +177,9 @@ tr:hover td{background:var(--bg)}
 
   <div class="s-sec">
     <div class="s-lbl" style="border-top:2px solid var(--acc);padding-top:.5rem;color:var(--acc)">場館安親（額外收益）</div>
-    <div class="sf"><div class="sh"><span class="sl">平均每日安親名額（最多8隻）</span><span class="sv" id="vDcN">0 隻</span></div>
-      <input type="range" min="0" max="8" step="0.5" value="0" oninput="sync('DcN',parseFloat(this.value),v=>v+' 隻')"></div>
-    <div class="sf"><div class="sh"><span class="sl">安親日費／隻</span><span class="sv" id="vDcF">$4,000</span></div>
+    <div class="sf"><div class="sh"><span class="sl">每週有幾隻狗狗安親</span><span class="sv" id="vDcN">0 隻/週</span></div>
+      <input type="range" min="0" max="40" step="1" value="0" oninput="sync('DcN',parseInt(this.value),v=>v+' 隻/週')"></div>
+    <div class="sf"><div class="sh"><span class="sl">安親費／隻／次</span><span class="sv" id="vDcF">$4,000</span></div>
       <input type="range" min="500" max="8000" step="100" value="4000" oninput="sync('DcF',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="hint-box" id="hintDc">安親月收：計算中</div>
   </div>
@@ -296,7 +295,7 @@ function dk(){var th=document.documentElement.dataset.theme;return th==='dark'||
 function amort(){return V.Ren/(V.Yr*12);}
 function annMonth(){return V.Ann/12;}
 function fixed(t){return t*V.Sl+V.Rt+V.Ot+amort()+annMonth();}
-function dcRev(){return V.DcN*V.DcF*V.W;}
+function dcRev(){return V.DcN*V.DcF*Math.round(V.W/5);}
 function fixedEff(t){return Math.max(0,fixed(t)-dcRev());}
 function beCalc(t){return Math.ceil(fixed(t)/V.Rv);}
 function beEffCalc(t){return Math.ceil(fixedEff(t)/V.Rv);}
@@ -536,7 +535,7 @@ function update(){
   S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,fEff:fEff};
 
   el('hintAmort').textContent='月攤提裝潢：$'+fmtN(am)+' /月';
-  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻均 × $'+fmtN(V.DcF)+' × '+days+'天）';
+  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻/週 × $'+fmtN(V.DcF)+' × '+Math.round(days/5)+'週）';
   if(el('hintAnn'))el('hintAnn').textContent='月均年度成本：$'+fmtN(ann)+'（÷12）';
 
   el('ivTotal').textContent='$'+fmtN(totalInvest);
