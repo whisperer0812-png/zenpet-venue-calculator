@@ -1,0 +1,632 @@
+
+<title>場館成本效益試算</title>
+<style>
+/* ZenPet color system — synced from zenpet-train-ops.netlify.app */
+:root{
+  --bg:#F7F5F0;--surf:#FFFFFF;--surf2:#EDE9E1;
+  --acc:#436161;--acc-l:#DFF0EE;
+  --text:#2C2C2C;--text2:#6F7573;--text3:#9BAAAA;
+  --pos:#3F7D5A;--neg:#B0432C;--warn:#B0742A;
+  --bdr:#E6E2D9;--r:10px
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#182525;--surf:#212E2E;--surf2:#182525;
+  --acc:#4A7C7E;--acc-l:#1C3535;
+  --text:#E8E4DC;--text2:#8BA09E;--text3:#4A5E5C;
+  --pos:#5BAF7A;--neg:#D4735A;--warn:#D4964A;--bdr:#2E4040
+}}
+:root[data-theme=light]{--bg:#F7F5F0;--surf:#FFFFFF;--surf2:#EDE9E1;--acc:#436161;--acc-l:#DFF0EE;--text:#2C2C2C;--text2:#6F7573;--text3:#9BAAAA;--pos:#3F7D5A;--neg:#B0432C;--warn:#B0742A;--bdr:#E6E2D9}
+:root[data-theme=dark]{--bg:#182525;--surf:#212E2E;--surf2:#182525;--acc:#4A7C7E;--acc-l:#1C3535;--text:#E8E4DC;--text2:#8BA09E;--text3:#4A5E5C;--pos:#5BAF7A;--neg:#D4735A;--warn:#D4964A;--bdr:#2E4040}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
+
+/* ── Login gate ── */
+#gate{position:fixed;inset:0;background:linear-gradient(135deg,#33504F,#1A2828);z-index:9999;display:flex;align-items:center;justify-content:center}
+.gate-box{background:#F7F5F0;border-radius:16px;padding:2.5rem 2rem;width:340px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.gate-logo{font-size:22px;font-weight:700;color:#436161;letter-spacing:.08em;margin-bottom:.3rem}
+.gate-sub{font-size:13px;color:#6F7573;margin-bottom:1.8rem}
+.gate-label{font-size:12px;font-weight:600;color:#6F7573;text-align:left;margin-bottom:.4rem;display:block}
+.gate-input{width:100%;padding:10px 13px;border:1.5px solid #E6E2D9;border-radius:8px;font-size:14px;outline:none;transition:.15s;background:#fff;color:#2C2C2C}
+.gate-input:focus{border-color:#436161;box-shadow:0 0 0 3px rgba(67,97,97,.14)}
+.gate-btn{width:100%;padding:11px;background:#436161;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:1rem;transition:.12s}
+.gate-btn:hover{background:#1D4ED8}
+.gate-err{color:#DC2626;font-size:12px;margin-top:.7rem;min-height:18px}
+.gate-note{font-size:11px;color:#94A3B8;margin-top:1rem}
+
+/* ── App layout ── */
+header{background:var(--acc);color:#fff;padding:.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
+.h-title{font-size:15px;font-weight:600}.h-sub{font-size:11px;opacity:.65;margin-top:1px}
+.h-right{display:flex;align-items:center;gap:10px}
+.user-tag{font-size:11px;opacity:.7;background:rgba(255,255,255,.15);padding:4px 9px;border-radius:5px}
+.theme-btn{background:rgba(255,255,255,.18);border:none;border-radius:6px;color:#fff;cursor:pointer;font-size:12px;padding:5px 11px}
+.layout{display:grid;grid-template-columns:268px 1fr;min-height:calc(100vh - 52px)}
+.sidebar{background:var(--surf);border-right:1px solid var(--bdr);padding:1rem .9rem;position:sticky;top:0;height:calc(100vh - 52px);overflow-y:auto}
+.main{padding:1.1rem;overflow-y:auto}
+.s-sec{margin-bottom:1.3rem}
+.s-lbl{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.55rem;padding-bottom:.3rem;border-bottom:1px solid var(--bdr)}
+.tog-group{display:flex;gap:6px}
+.tog{flex:1;padding:7px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--bg);color:var(--text2);font-size:13px;cursor:pointer;font-weight:500;transition:all .12s}
+.tog.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.sf{margin-bottom:.8rem}
+.sh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.sl{font-size:12px;color:var(--text2);font-weight:500}
+.sv{font-size:12px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--bdr);cursor:pointer;outline:none;border:none;accent-color:var(--acc)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--acc);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--acc);border:none}
+.hint-box{font-size:11px;color:var(--text3);margin-top:.35rem;padding:.35rem .6rem;background:var(--surf2);border-radius:6px;font-variant-numeric:tabular-nums}
+.dc-badge{display:inline-block;padding:2px 7px;background:var(--acc-l);color:var(--acc);border-radius:5px;font-size:10px;font-weight:700;margin-left:5px;vertical-align:middle}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:1rem 1.1rem;margin-bottom:.9rem}
+.card-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:.85rem}
+.chart-wrap{position:relative;width:100%}
+.legend{display:flex;gap:12px;margin-top:9px;font-size:12px;color:var(--text2);flex-wrap:wrap;align-items:center}
+.leg-dot{width:9px;height:9px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+.leg-sw{width:18px;height:3px;display:inline-block;vertical-align:middle;margin-right:4px;border-radius:1px}
+.invest-bar{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:.9rem 1.1rem;margin-bottom:.9rem;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.inv-item{text-align:center}
+.inv-lbl{font-size:11px;color:var(--text3);margin-bottom:2px}
+.inv-val{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text)}
+.inv-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:.9rem}
+.kpi{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:.8rem .9rem}
+.kpi-lbl{font-size:11px;color:var(--text3);font-weight:600;margin-bottom:2px}
+.kpi-val{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.1}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}.warn{color:var(--warn)}
+.dc-strip{background:linear-gradient(90deg,var(--acc-l),transparent);border:1px solid var(--bdr);border-left:3px solid var(--acc);border-radius:var(--r);padding:.7rem 1rem;margin-bottom:.9rem;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.dcs-item{}.dcs-lbl{font-size:11px;color:var(--text3)}.dcs-val{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.tab-row{display:flex;gap:6px;margin-bottom:1rem}
+.tab{padding:6px 13px;border:1px solid var(--bdr);border-radius:var(--r);background:var(--bg);color:var(--text2);font-size:13px;cursor:pointer;font-weight:500;transition:all .12s}
+.tab.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.sc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sc{border:1px solid var(--bdr);border-radius:var(--r);padding:.8rem;background:var(--surf2)}
+.sc.hi{border-color:var(--acc);border-width:2px}
+.sc-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.t-red{background:#FEE2E2;color:#991B1B}.t-grn{background:#D1FAE5;color:#065F46}.t-blu{background:#DBEAFE;color:#1E40AF}
+:root[data-theme=dark] .t-red{background:#3B1515;color:#FCA5A5}:root[data-theme=dark] .t-grn{background:#0D2E1C;color:#6EE7B7}:root[data-theme=dark] .t-blu{background:#102040;color:#93C5FD}
+@media(prefers-color-scheme:dark){.t-red{background:#3B1515;color:#FCA5A5}.t-grn{background:#0D2E1C;color:#6EE7B7}.t-blu{background:#102040;color:#93C5FD}}
+.sc-day{font-size:11px;color:var(--text3);margin-bottom:1px}
+.sc-n{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.sc-unit{font-size:11px;color:var(--text3)}.sc-rev{font-size:12px;color:var(--text2);margin-top:3px;font-variant-numeric:tabular-nums}
+.sc-profit{font-size:13px;font-weight:600;margin-top:8px;padding-top:6px;border-top:1px solid var(--bdr);font-variant-numeric:tabular-nums}
+.cmp2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp-col{border:1px solid var(--bdr);border-radius:var(--r);padding:.9rem 1rem}
+.cmp-col.hi{border-color:var(--acc);border-width:2px}
+.cmp-col-title{font-size:13px;font-weight:700;margin-bottom:.7rem;padding-bottom:.5rem;border-bottom:1px solid var(--bdr)}
+.cmp-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:var(--text2)}
+.cmp-val{font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
+.delta-box{background:var(--surf2);border-radius:var(--r);padding:.8rem 1rem;margin-top:.85rem;font-size:13px}
+.delta-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--text2);font-variant-numeric:tabular-nums}
+.delta-val{font-weight:600;color:var(--text)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:7px 9px;background:var(--surf2);color:var(--text2);font-weight:700;font-size:10px;letter-spacing:.04em;text-transform:uppercase}
+td{padding:7px 9px;border-bottom:1px solid var(--bdr);font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.be-row td{background:var(--acc-l)!important;font-weight:600}
+.dim{color:var(--text3)}
+.note{font-size:11px;color:var(--text3);margin-top:.6rem}
+@media(max-width:700px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--bdr)}.kpi-row{grid-template-columns:repeat(2,1fr)}.sc-grid,.cmp2{grid-template-columns:1fr}.invest-bar,.dc-strip{grid-template-columns:1fr 1fr}}
+</style>
+
+<!-- Login Gate -->
+<div id="gate">
+  <div class="gate-box">
+    <div class="gate-logo">場館效益試算</div>
+    <div class="gate-sub">股東專用 · Shareholders Only</div>
+    <label class="gate-label">請輸入您的 Email</label>
+    <input class="gate-input" type="email" id="gateEmail" placeholder="your@email.com" onkeydown="if(event.key==='Enter')gateLogin()">
+    <button class="gate-btn" onclick="gateLogin()">進入試算工具</button>
+    <div class="gate-err" id="gateErr"></div>
+    <div class="gate-note">僅限受邀股東帳號</div>
+  </div>
+</div>
+
+<header id="appHeader" style="display:none">
+  <div><div class="h-title">場館成本效益試算</div><div class="h-sub">拖動滑桿，三張圖表即時更新</div></div>
+  <div class="h-right">
+    <span class="user-tag" id="userTag"></span>
+    <button class="theme-btn" onclick="toggleTheme()">深色 / 淺色</button>
+  </div>
+</header>
+
+<div class="layout" id="appLayout" style="display:none">
+<aside class="sidebar">
+  <div class="s-sec">
+    <div class="s-lbl">訓練師人數</div>
+    <div class="tog-group">
+      <button class="tog on" id="btn3" onclick="setT(3)">三師</button>
+      <button class="tog"    id="btn4" onclick="setT(4)">四師</button>
+      <button class="tog"    id="btn5" onclick="setT(5)">五師</button>
+    </div>
+  </div>
+
+  <div class="s-sec">
+    <div class="s-lbl">課程排班</div>
+    <div class="sf"><div class="sh"><span class="sl">每師每日堂數</span><span class="sv" id="vD">2 堂</span></div>
+      <input type="range" min=".5" max="6" step=".5" value="2" oninput="sync('D',this.value,v=>v+' 堂')"></div>
+    <div class="sf"><div class="sh"><span class="sl">月工作天數</span><span class="sv" id="vW">22 天</span></div>
+      <input type="range" min="15" max="30" step="1" value="22" oninput="sync('W',this.value,v=>v+' 天')"></div>
+    <div class="sf"><div class="sh"><span class="sl">每堂收費</span><span class="sv" id="vRv">$3,500</span></div>
+      <input type="range" min="500" max="10000" step="100" value="3500" oninput="sync('Rv',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+  </div>
+
+  <div class="s-sec">
+    <div class="s-lbl">固定月成本</div>
+    <div class="sf"><div class="sh"><span class="sl">月租金</span><span class="sv" id="vRt">$150,000</span></div>
+      <input type="range" min="30000" max="400000" step="5000" value="150000" oninput="sync('Rt',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">每位訓練師月薪</span><span class="sv" id="vSl">$70,000</span></div>
+      <input type="range" min="30000" max="150000" step="1000" value="70000" oninput="sync('Sl',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">其他月成本</span><span class="sv" id="vOt">$20,000</span></div>
+      <input type="range" min="0" max="100000" step="1000" value="20000" oninput="sync('Ot',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">年度額外固定成本 <span class="dc-badge">NEW</span></span><span class="sv" id="vAnn">$0</span></div>
+      <input type="range" min="0" max="1000000" step="10000" value="0" oninput="sync('Ann',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="hint-box" id="hintAnn">月均年度成本：$0（÷12）</div>
+  </div>
+
+  <div class="s-sec">
+    <div class="s-lbl">前期投入 &amp; 攤提</div>
+    <div class="sf"><div class="sh"><span class="sl">裝潢費（一次性）</span><span class="sv" id="vRen">$2,500,000</span></div>
+      <input type="range" min="0" max="5000000" step="50000" value="2500000" oninput="sync('Ren',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">押金（月數）</span><span class="sv" id="vDep">2 個月</span></div>
+      <input type="range" min="0" max="6" step="1" value="2" oninput="sync('Dep',this.value,v=>v+' 個月')"></div>
+    <div class="sf"><div class="sh"><span class="sl">簽約年限</span><span class="sv" id="vYr">5 年</span></div>
+      <input type="range" min="1" max="10" step="1" value="5" oninput="sync('Yr',this.value,v=>v+' 年')"></div>
+    <div class="hint-box" id="hintAmort">月攤提裝潢：計算中</div>
+  </div>
+
+  <div class="s-sec">
+    <div class="s-lbl" style="border-top:2px solid var(--acc);padding-top:.5rem;color:var(--acc)">場館安親（額外收益）</div>
+    <div class="sf"><div class="sh"><span class="sl">平均每日安親名額（最多8隻）</span><span class="sv" id="vDcN">0 隻</span></div>
+      <input type="range" min="0" max="8" step="0.5" value="0" oninput="sync('DcN',parseFloat(this.value),v=>v+' 隻')"></div>
+    <div class="sf"><div class="sh"><span class="sl">安親日費／隻</span><span class="sv" id="vDcF">$4,000</span></div>
+      <input type="range" min="500" max="8000" step="100" value="4000" oninput="sync('DcF',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="hint-box" id="hintDc">安親月收：計算中</div>
+  </div>
+</aside>
+
+<main class="main">
+  <!-- KPIs -->
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-lbl">訓練損益平衡</div><div class="kpi-val" id="kBe">—</div><div class="kpi-sub" id="kBeS">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">本月預估淨利</div><div class="kpi-val" id="kPr">—</div><div class="kpi-sub" id="kPrS">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">前期回本月數</div><div class="kpi-val" id="kRec">—</div><div class="kpi-sub" id="kRecS">—</div></div>
+    <div class="kpi"><div class="kpi-lbl">訓練產能利用率</div><div class="kpi-val" id="kUt">—</div><div class="kpi-sub">以每師 4 堂為上限</div></div>
+  </div>
+
+  <!-- invest bar -->
+  <div class="invest-bar">
+    <div class="inv-item"><div class="inv-lbl">前期資金需求</div><div class="inv-val" id="ivTotal">—</div><div class="inv-sub">裝潢 + 押金 + 首月租金</div></div>
+    <div class="inv-item"><div class="inv-lbl">月攤提裝潢</div><div class="inv-val" id="ivAmort">—</div><div class="inv-sub" id="ivSub">—</div></div>
+    <div class="inv-item"><div class="inv-lbl">月固定成本合計</div><div class="inv-val" id="ivFixed">—</div><div class="inv-sub">含攤提 + 年度均攤</div></div>
+    <div class="inv-item"><div class="inv-lbl">安親月收貢獻</div><div class="inv-val pos" id="ivDc">—</div><div class="inv-sub">可抵消固定成本</div></div>
+  </div>
+
+  <!-- daycare strip -->
+  <div class="dc-strip">
+    <div class="dcs-item"><div class="dcs-lbl">安親有效固定成本</div><div class="dcs-val" id="dcEffFixed">—</div></div>
+    <div class="dcs-item"><div class="dcs-lbl">含安親訓練損益平衡</div><div class="dcs-val" id="dcBe">—</div></div>
+    <div class="dcs-item"><div class="dcs-lbl">安親降低損益平衡</div><div class="dcs-val pos" id="dcSave">—</div></div>
+  </div>
+
+  <!-- Chart 1: break-even -->
+  <div class="card">
+    <div class="card-title">損益平衡圖 — 月堂數 × 金額（含安親後的有效成本線）</div>
+    <div class="chart-wrap" style="height:240px"><canvas id="beChart"></canvas></div>
+    <div class="legend" id="beLeg"></div>
+  </div>
+
+  <!-- Chart 2: bar -->
+  <div class="card">
+    <div class="card-title">各堂數淨利試算 — 正（藍）/ 負（紅）含安親收益</div>
+    <div class="chart-wrap" style="height:210px"><canvas id="barChart"></canvas></div>
+    <div class="legend" id="barLeg"></div>
+  </div>
+
+  <!-- Chart 3: line with fill -->
+  <div class="card">
+    <div class="card-title">月淨利曲線 — 三師 / 四師 / 五師（曲線間填色）</div>
+    <div class="chart-wrap" style="height:210px"><canvas id="lineChart"></canvas></div>
+    <div class="legend" id="lineLeg"></div>
+  </div>
+
+  <!-- Scenarios / Compare / Table -->
+  <div class="card">
+    <div class="card-title">情境對照</div>
+    <div class="tab-row">
+      <button class="tab on" id="tabSc"  onclick="showTab('sc')">低 / 中 / 滿載</button>
+      <button class="tab"    id="tabCmp" onclick="showTab('cmp')">三 / 四 / 五師比較</button>
+      <button class="tab"    id="tabTbl" onclick="showTab('tbl')">完整試算表</button>
+    </div>
+    <div id="panelSc"><div class="sc-grid" id="scGrid"></div></div>
+    <div id="panelCmp" style="display:none"><div class="cmp2" id="cmpCols"></div><div class="delta-box" id="deltaBox"></div></div>
+    <div id="panelTbl" style="display:none">
+      <div class="tbl-wrap"><table><thead><tr>
+        <th>月堂數</th><th>月訓練收入</th><th>三師每人/日</th><th>三師淨利</th><th>四師每人/日</th><th>四師淨利</th><th>五師每人/日</th><th>五師淨利</th>
+      </tr></thead><tbody id="tblBody"></tbody></table></div>
+      <div class="note">固定成本含月攤提裝潢、年度均攤、安親收益已計入。藍底列為三師損益平衡點。</div>
+    </div>
+  </div>
+</main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── Auth ─────────────────────────────────────────────────────────
+var ALLOWED=['whisperer0812@gmail.com','sheepeach1227@gmail.com','yoloemilin520@gmail.com'];
+var _user=null;
+
+function gateLogin(){
+  var em=document.getElementById('gateEmail').value.trim().toLowerCase();
+  if(ALLOWED.indexOf(em)>=0){
+    _user=em;
+    try{localStorage.setItem('vcUser',em);}catch(e){}
+    showApp();
+  }else{
+    document.getElementById('gateErr').textContent='此帳號不在受邀名單中，請確認 Email 是否正確。';
+  }
+}
+
+function showApp(){
+  document.getElementById('gate').style.display='none';
+  document.getElementById('appHeader').style.display='flex';
+  document.getElementById('appLayout').style.display='grid';
+  document.getElementById('userTag').textContent=_user;
+  update();
+}
+
+(function(){
+  try{
+    var saved=localStorage.getItem('vcUser');
+    if(saved&&ALLOWED.indexOf(saved)>=0){_user=saved;showApp();}
+  }catch(e){}
+})();
+
+// ── State ─────────────────────────────────────────────────────────
+var T=3, barCh=null, lineCh=null;
+var V={D:2,W:22,Rv:3500,Rt:150000,Sl:70000,Ot:20000,Ann:0,Ren:2500000,Dep:2,Yr:5,DcN:0,DcF:4000};
+var S={fN:0,Rv:3000,sessions:0,beN:0,dcRev:0,fEff:0,beEff:0};
+
+function el(id){return document.getElementById(id);}
+function fmtN(n){return Math.round(n).toLocaleString('zh-TW');}
+function fmtP(n){return(n>=0?'+ ':'- ')+'$'+fmtN(Math.abs(n));}
+function pc(n){return n>0?'pos':n<0?'neg':'';}
+function dk(){var th=document.documentElement.dataset.theme;return th==='dark'||(!th&&matchMedia('(prefers-color-scheme:dark)').matches);}
+function amort(){return V.Ren/(V.Yr*12);}
+function annMonth(){return V.Ann/12;}
+function fixed(t){return t*V.Sl+V.Rt+V.Ot+amort()+annMonth();}
+function dcRev(){return V.DcN*V.DcF*V.W;}
+function fixedEff(t){return Math.max(0,fixed(t)-dcRev());}
+function beCalc(t){return Math.ceil(fixed(t)/V.Rv);}
+function beEffCalc(t){return Math.ceil(fixedEff(t)/V.Rv);}
+
+function sync(key,val,fmtFn){
+  V[key]=parseFloat(val);
+  el('v'+key).textContent=fmtFn(val);
+  if(key==='Ann')el('hintAnn').textContent='月均年度成本：$'+fmtN(V.Ann/12)+'（÷12）';
+  update();
+}
+function setT(n){T=n;[3,4,5].forEach(function(i){el('btn'+i).classList.toggle('on',n===i);});update();}
+
+// ── Palette (ZenPet) ─────────────────────────────────────────────
+function pal(){
+  var d=dk();
+  return{
+    blue:d?'#4A7C7E':'#436161',      // pine/teal — primary line
+    green:d?'#5BAF7A':'#3F7D5A',     // ok green — four-trainer line
+    red:d?'#D4735A':'#B0432C',       // danger red
+    amber:d?'#D4964A':'#B0742A',     // warn amber — break-even dot
+    teal:d?'#7DBDBD':'#4A7C7E',      // teal light — effective cost line
+    gc:d?'rgba(255,255,255,.06)':'rgba(0,0,0,.04)',
+    tc:d?'#4A5E5C':'#9BAAAA',
+    blueFill:d?'rgba(74,124,126,.16)':'rgba(67,97,97,.10)',
+    redFill:d?'rgba(212,115,90,.15)':'rgba(176,67,44,.09)',
+    lineFill:d?'rgba(74,124,126,.17)':'rgba(67,97,97,.12)'
+  };
+}
+
+// ── Chart 1: Break-even canvas ────────────────────────────────────
+function drawBe(){
+  var cvs=el('beChart');if(!cvs)return;
+  var wrap=cvs.parentElement;
+  var W=wrap.clientWidth||600,H=wrap.clientHeight||240;
+  var dpr=window.devicePixelRatio||1;
+  cvs.width=Math.round(W*dpr);cvs.height=Math.round(H*dpr);
+  cvs.style.width=W+'px';cvs.style.height=H+'px';
+  var ctx=cvs.getContext('2d');ctx.scale(dpr,dpr);
+
+  var fN=S.fN,fEff=S.fEff,rv=S.Rv,bn=S.beN,bnEff=S.beEff,cs=S.sessions;
+  var p=pal(),d=dk();
+
+  var ml=58,mr=16,mt=24,mb=36,pw=W-ml-mr,ph=H-mt-mb;
+  var maxX=Math.max(bn*1.6,bnEff*1.6,cs+30,T*4*V.W+20,240);
+  var maxY=Math.max(fN,cs*rv)*1.15||1;
+
+  function pxX(s){return ml+(s/maxX)*pw;}
+  function pxY(v){return mt+ph*(1-v/maxY);}
+
+  ctx.clearRect(0,0,W,H);
+
+  // fills based on effective break-even
+  var bex=Math.max(ml,Math.min(ml+pw,pxX(bnEff)));
+  ctx.save();ctx.beginPath();ctx.rect(ml,mt,pw,ph);ctx.clip();
+  ctx.fillStyle=p.redFill;ctx.fillRect(ml,mt,bex-ml,ph);
+  ctx.fillStyle=p.blueFill;ctx.fillRect(bex,mt,ml+pw-bex,ph);
+  // break-even divider
+  ctx.strokeStyle=d?'rgba(252,211,77,.5)':'rgba(217,119,6,.35)';
+  ctx.lineWidth=1;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(bex,mt);ctx.lineTo(bex,mt+ph);ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+
+  // grid
+  ctx.save();
+  for(var i=0;i<=5;i++){
+    var v=maxY*i/5,gy=pxY(v);
+    ctx.strokeStyle=p.gc;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(ml,gy);ctx.lineTo(ml+pw,gy);ctx.stroke();
+    var lbl=v>=100000?(v/10000).toFixed(0)+'萬':v>=10000?(v/10000).toFixed(1)+'萬':(v/1000).toFixed(0)+'k';
+    ctx.fillStyle=p.tc;ctx.font='10px system-ui';ctx.textAlign='right';ctx.fillText(lbl,ml-5,gy+3.5);
+  }
+  for(var i=0;i<=6;i++){
+    var sx=Math.round(maxX*i/6),gx=pxX(sx);
+    ctx.strokeStyle=p.gc;ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(gx,mt);ctx.lineTo(gx,mt+ph);ctx.stroke();
+    ctx.fillStyle=p.tc;ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText(sx+'堂',gx,mt+ph+14);
+  }
+  ctx.restore();
+
+  // axes
+  ctx.strokeStyle=p.tc;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
+
+  ctx.save();ctx.beginPath();ctx.rect(ml,mt,pw,ph);ctx.clip();
+  // effective fixed cost line (with daycare)
+  if(S.dcRev>0){
+    ctx.strokeStyle=p.teal;ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(ml,pxY(fEff));ctx.lineTo(ml+pw,pxY(fEff));ctx.stroke();ctx.setLineDash([]);
+  }
+  // raw fixed cost line
+  ctx.strokeStyle=p.red;ctx.lineWidth=1.5;ctx.setLineDash([7,4]);
+  ctx.beginPath();ctx.moveTo(ml,pxY(fN));ctx.lineTo(ml+pw,pxY(fN));ctx.stroke();ctx.setLineDash([]);
+  // revenue
+  ctx.strokeStyle=p.blue;ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(var i=0;i<=80;i++){var sx=i/80*maxX;if(i===0)ctx.moveTo(pxX(sx),pxY(sx*rv));else ctx.lineTo(pxX(sx),pxY(sx*rv));}
+  ctx.stroke();
+  // current line
+  var currX=pxX(cs),currY=pxY(cs*rv),inP=(cs*rv+S.dcRev)>fN;
+  ctx.strokeStyle=d?'rgba(255,255,255,.28)':'rgba(0,0,0,.2)';
+  ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(currX,mt);ctx.lineTo(currX,mt+ph);ctx.stroke();ctx.setLineDash([]);
+  ctx.restore();
+
+  // labels
+  ctx.fillStyle=d?'rgba(255,255,255,.35)':'rgba(0,0,0,.25)';
+  ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText('現在',currX,mt-5);
+  ctx.beginPath();ctx.arc(currX,currY,5,0,Math.PI*2);
+  ctx.fillStyle=inP?p.green:p.red;ctx.fill();
+  ctx.strokeStyle=d?'#0F172A':'#fff';ctx.lineWidth=2;ctx.stroke();
+
+  // effective be dot
+  var bpY=pxY(fEff>0?fEff:fN);
+  ctx.beginPath();ctx.arc(bex,bpY,6,0,Math.PI*2);
+  ctx.fillStyle=p.amber;ctx.fill();ctx.strokeStyle=d?'#0F172A':'#fff';ctx.lineWidth=2;ctx.stroke();
+  var lbx=bex>(ml+pw*0.6)?bex-9:bex+9;
+  ctx.fillStyle=p.amber;ctx.font='bold 11px system-ui';
+  ctx.textAlign=bex>(ml+pw*0.6)?'right':'left';
+  ctx.fillText('損益平衡 '+(bnEff)+' 堂',lbx,bpY-9);
+
+  el('beLeg').innerHTML=
+    '<span><span class="leg-sw" style="background:'+p.blue+'"></span>訓練月收入</span>'+
+    '<span><span class="leg-sw" style="background:'+p.red+'"></span>固定成本</span>'+
+    (S.dcRev>0?'<span><span class="leg-sw" style="background:'+p.teal+'"></span>有效成本（含安親收入）</span>':'')+
+    '<span style="color:'+p.amber+'">● 損益平衡點</span>';
+}
+
+// ── Chart 2: Bar ──────────────────────────────────────────────────
+var BAR_ROWS=[60,80,100,120,140,160,180,200,225,250,300];
+
+function renderBar(){
+  var p=pal(),f=fixed(T),rv=V.Rv,dc=dcRev();
+  var profits=BAR_ROWS.map(function(s){return s*rv+dc-f;});
+  var bgColors=profits.map(function(v){return v>=0?p.blue:p.red;});
+
+  if(!barCh){
+    barCh=new Chart(el('barChart'),{
+      type:'bar',
+      data:{labels:BAR_ROWS.map(function(s){return s+' 堂';}),datasets:[
+        {label:'月淨利（含安親）',data:profits,backgroundColor:bgColors,borderRadius:3,borderSkipped:false}
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,animation:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return(c.raw>=0?'+ ':'- ')+'$'+fmtN(Math.abs(c.raw));}}}},
+        scales:{
+          x:{ticks:{color:p.tc,font:{size:11}},grid:{color:p.gc}},
+          y:{ticks:{color:p.tc,font:{size:11},callback:function(v){return(v>=0?'+':'')+Math.round(v/10000)+'萬';}},grid:{color:p.gc}}
+        }
+      },
+      plugins:[{id:'zeroLine',afterDraw:function(chart){
+        var xs=chart.scales.x,ys=chart.scales.y,ca=chart.chartArea,ctx2=chart.ctx;
+        if(!xs||!ys||!ca)return;
+        var zeroY=ys.getPixelForValue(0);
+        ctx2.save();
+        ctx2.strokeStyle=dk()?'rgba(255,255,255,.25)':'rgba(0,0,0,.2)';
+        ctx2.lineWidth=1.5;ctx2.setLineDash([5,4]);
+        ctx2.beginPath();ctx2.moveTo(ca.left,zeroY);ctx2.lineTo(ca.right,zeroY);ctx2.stroke();
+        ctx2.setLineDash([]);
+        ctx2.fillStyle=dk()?'rgba(255,255,255,.4)':'rgba(0,0,0,.35)';
+        ctx2.font='10px system-ui';ctx2.textAlign='left';
+        ctx2.fillText('損益平衡線',ca.left+4,zeroY-4);
+        ctx2.restore();
+      }}]
+    });
+  }else{
+    barCh.data.datasets[0].data=profits;barCh.data.datasets[0].backgroundColor=bgColors;
+    barCh.options.scales.x.ticks.color=p.tc;barCh.options.scales.y.ticks.color=p.tc;
+    barCh.options.scales.x.grid.color=p.gc;barCh.options.scales.y.grid.color=p.gc;
+    barCh.update('none');
+  }
+  el('barLeg').innerHTML=
+    '<span><span class="leg-dot" style="background:'+p.blue+'"></span>月淨利（正）</span>'+
+    '<span><span class="leg-dot" style="background:'+p.red+'"></span>月虧損（負）</span>'+
+    (dcRev()>0?'<span style="color:'+p.tc+'">已含安親月收 $'+fmtN(dcRev())+'</span>':'');
+}
+
+// ── Chart 3: Line with fill ───────────────────────────────────────
+var LINE_ROWS=[80,100,120,140,160,176,198,220,264,300,352];
+
+function renderLine(){
+  var p=pal(),f3=fixed(3),f4=fixed(4),f5=fixed(5),rv=V.Rv,dc=dcRev();
+  var pd3=LINE_ROWS.map(function(s){return s*rv+dc-f3;});
+  var pd4=LINE_ROWS.map(function(s){return s*rv+dc-f4;});
+  var pd5=LINE_ROWS.map(function(s){return s*rv+dc-f5;});
+  var orange=dk()?'#E7AD88':'#C27B40';
+
+  if(!lineCh){
+    lineCh=new Chart(el('lineChart'),{
+      type:'line',
+      data:{
+        labels:LINE_ROWS.map(function(s){return s+'堂';}),
+        datasets:[
+          {label:'三師月淨利',data:pd3,borderColor:p.blue,backgroundColor:p.lineFill,
+           fill:'+1',borderWidth:2.5,pointRadius:4,pointBackgroundColor:p.blue,tension:.35},
+          {label:'四師月淨利',data:pd4,borderColor:p.green,backgroundColor:'transparent',
+           fill:false,borderWidth:2,borderDash:[5,4],pointRadius:4,pointBackgroundColor:p.green,tension:.35},
+          {label:'五師月淨利',data:pd5,borderColor:orange,backgroundColor:'transparent',
+           fill:false,borderWidth:2,borderDash:[3,3],pointRadius:4,pointBackgroundColor:orange,tension:.35}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,animation:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.dataset.label+'：'+(c.raw>=0?'+ ':'- ')+'$'+fmtN(Math.abs(c.raw));}}}},
+        scales:{
+          x:{ticks:{color:p.tc,font:{size:11}},grid:{color:p.gc}},
+          y:{ticks:{color:p.tc,font:{size:11},callback:function(v){return(v>=0?'+':'')+Math.round(v/10000)+'萬';}},grid:{color:p.gc}}
+        }
+      }
+    });
+  }else{
+    var og=dk()?'#E7AD88':'#C27B40';
+    lineCh.data.datasets[0].data=pd3;lineCh.data.datasets[0].borderColor=p.blue;lineCh.data.datasets[0].backgroundColor=p.lineFill;lineCh.data.datasets[0].pointBackgroundColor=p.blue;
+    lineCh.data.datasets[1].data=pd4;lineCh.data.datasets[1].borderColor=p.green;lineCh.data.datasets[1].pointBackgroundColor=p.green;
+    lineCh.data.datasets[2].data=pd5;lineCh.data.datasets[2].borderColor=og;lineCh.data.datasets[2].pointBackgroundColor=og;
+    lineCh.options.scales.x.ticks.color=p.tc;lineCh.options.scales.y.ticks.color=p.tc;
+    lineCh.options.scales.x.grid.color=p.gc;lineCh.options.scales.y.grid.color=p.gc;
+    lineCh.update('none');
+  }
+  var og2=dk()?'#E7AD88':'#C27B40';
+  el('lineLeg').innerHTML=
+    '<span><span class="leg-dot" style="background:'+p.blue+'"></span>三師月淨利</span>'+
+    '<span><span class="leg-dot" style="background:'+p.green+'"></span>四師月淨利</span>'+
+    '<span><span class="leg-dot" style="background:'+og2+'"></span>五師月淨利</span>';
+}
+
+// ── Main update ───────────────────────────────────────────────────
+function update(){
+  if(!_user)return;
+  var rv=V.Rv,days=V.W,perDay=V.D;
+  var am=amort(),ann=annMonth(),fN=fixed(T),f3=fixed(3),f4=fixed(4),f5=fixed(5);
+  var dc=dcRev(),fEff=fixedEff(T),beN=beCalc(T),beEff=beEffCalc(T);
+  var sessions=Math.round(T*perDay*days);
+  var revenue=sessions*rv,prf=revenue+dc-fN;
+  var b3=beCalc(3),b4=beCalc(4),b3eff=beEffCalc(3);
+  var maxCap=T*4*days,totalInvest=V.Ren+V.Dep*V.Rt+V.Rt;
+
+  S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,fEff:fEff};
+
+  el('hintAmort').textContent='月攤提裝潢：$'+fmtN(am)+' /月';
+  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻均 × $'+fmtN(V.DcF)+' × '+days+'天）';
+  if(el('hintAnn'))el('hintAnn').textContent='月均年度成本：$'+fmtN(ann)+'（÷12）';
+
+  el('ivTotal').textContent='$'+fmtN(totalInvest);
+  el('ivAmort').textContent='$'+fmtN(am)+' /月';
+  el('ivSub').textContent='$'+fmtN(V.Ren)+' ÷ '+V.Yr+'年 ÷ 12';
+  el('ivFixed').textContent='$'+fmtN(fN);
+  el('ivDc').textContent='+ $'+fmtN(dc)+' /月';
+
+  el('dcEffFixed').textContent='$'+fmtN(fEff)+' /月';
+  el('dcBe').textContent=beEff+' 堂 /月';
+  var saved=beN-beEff;
+  el('dcSave').textContent=saved>0?'少 '+saved+' 堂':'與訓練相同';
+
+  el('kBe').textContent=beN+' 堂';el('kBeS').textContent='含安親後僅需 '+beEff+' 堂';
+  el('kPr').textContent=fmtP(prf);el('kPr').className='kpi-val '+pc(prf);
+  el('kPrS').textContent='訓練 $'+fmtN(revenue)+' + 安親 $'+fmtN(dc);
+  if(prf>0){
+    var rec=Math.ceil(totalInvest/prf);
+    el('kRec').textContent=rec+' 個月';el('kRec').className='kpi-val '+(rec<=36?'pos':rec<=60?'warn':'neg');
+    el('kRecS').textContent='$'+fmtN(totalInvest)+' ÷ $'+fmtN(prf)+'/月';
+  }else{
+    el('kRec').textContent='尚未獲利';el('kRec').className='kpi-val neg';el('kRecS').textContent='目前堂數未達損益平衡';
+  }
+  var util=maxCap>0?Math.round(sessions/maxCap*100):0;
+  el('kUt').textContent=util+'%';el('kUt').className='kpi-val '+(util>=60?'pos':util>=35?'':'neg');
+
+  // scenarios
+  el('scGrid').innerHTML=[[1,'低量','t-red'],[2,'中量','t-grn'],[3,'滿載','t-blu']].map(function(x){
+    var d2=x[0],lbl=x[1],tc=x[2];
+    var s=Math.round(T*d2*days),r=s*rv,p2=r+dc-fN,hi=d2===Math.round(perDay);
+    return '<div class="sc'+(hi?' hi':'')+'"><span class="sc-tag '+tc+'">'+lbl+'</span>'+
+      '<div class="sc-day">每師每日 '+d2+' 堂 × '+days+' 天</div>'+
+      '<div class="sc-n">'+s+' <span class="sc-unit">堂/月</span></div>'+
+      '<div class="sc-rev">訓練 $'+fmtN(r)+'  安親 $'+fmtN(dc)+'</div>'+
+      '<div class="sc-profit '+pc(p2)+'">'+fmtP(p2)+'</div></div>';
+  }).join('');
+
+  // compare
+  el('cmpCols').style.gridTemplateColumns='repeat(3,1fr)';
+  el('cmpCols').innerHTML=[[3,'三師',false],[4,'四師',true],[5,'五師',false]].map(function(x){
+    var t=x[0],title=x[1],hi=x[2];
+    var f=fixed(t),bx=beCalc(t),bxEff=beEffCalc(t),d2s=Math.round(t*2*days),p2=d2s*rv+dc-f;
+    var recX=p2>0?Math.ceil(totalInvest/p2):null;
+    return '<div class="cmp-col'+(hi?' hi':'')+'">'+
+      '<div class="cmp-col-title"'+(hi?' style="color:var(--acc)"':'')+'>'+title+'</div>'+
+      '<div class="cmp-row"><span>月固定（含攤提）</span><span class="cmp-val">$'+fmtN(f)+'</span></div>'+
+      '<div class="cmp-row"><span>有效成本（-安親）</span><span class="cmp-val pos">$'+fmtN(fixedEff(t))+'</span></div>'+
+      '<div class="cmp-row"><span>純訓練損益平衡</span><span class="cmp-val">'+bx+' 堂</span></div>'+
+      '<div class="cmp-row"><span>含安親損益平衡</span><span class="cmp-val">'+bxEff+' 堂</span></div>'+
+      '<div class="cmp-row"><span>每師 2 堂/日 淨利</span><span class="cmp-val '+pc(p2)+'">'+fmtP(p2)+'</span></div>'+
+      '<div class="cmp-row"><span>前期回本（每師2堂）</span><span class="cmp-val">'+(recX?recX+' 個月':'—')+'</span></div></div>';
+  }).join('');
+  var b5=beCalc(5);
+  el('deltaBox').innerHTML=
+    '<div class="delta-row"><span>四師 vs 三師：額外固定成本</span><span class="delta-val">+ $'+fmtN(f4-f3)+' / 月，損益平衡多 '+(b4-b3)+' 堂</span></div>'+
+    '<div class="delta-row"><span>五師 vs 四師：額外固定成本</span><span class="delta-val">+ $'+fmtN(f5-f4)+' / 月，損益平衡多 '+(b5-b4)+' 堂</span></div>'+
+    '<div class="delta-row"><span>安親收益降低損益平衡</span><span class="delta-val pos">- '+(beN-beEff)+' 堂</span></div>';
+
+  // table
+  var rows2=[60,80,100,120,140,160,180,200,240,280,320,360];
+  el('tblBody').innerHTML=rows2.map(function(s){
+    var r=s*rv,p3=r+dc-f3,p4=r+dc-f4,p5=r+dc-f5;
+    var d3pd=(s/3/days).toFixed(1),d4pd=(s/4/days).toFixed(1),d5pd=(s/5/days).toFixed(1);
+    var cls=(s>=b3eff-5&&s<=b3eff+5)?'be-row':'';
+    return '<tr class="'+cls+'"><td>'+s+' 堂</td><td>$'+fmtN(r)+'</td>'+
+      '<td class="dim">'+d3pd+' 堂</td><td class="'+pc(p3)+'">'+fmtP(p3)+'</td>'+
+      '<td class="dim">'+d4pd+' 堂</td><td class="'+pc(p4)+'">'+fmtP(p4)+'</td>'+
+      '<td class="dim">'+d5pd+' 堂</td><td class="'+pc(p5)+'">'+fmtP(p5)+'</td></tr>';
+  }).join('');
+
+  drawBe();
+  renderBar();
+  renderLine();
+}
+
+function showTab(name){
+  var m={sc:'Sc',cmp:'Cmp',tbl:'Tbl'};
+  ['sc','cmp','tbl'].forEach(function(t){
+    el('panel'+m[t]).style.display=t===name?'':'none';
+    el('tab'+m[t]).classList.toggle('on',t===name);
+  });
+}
+
+function toggleTheme(){
+  var r=document.documentElement;
+  r.dataset.theme=(!r.dataset.theme||r.dataset.theme==='light')?'dark':'light';
+  if(barCh){barCh.destroy();barCh=null;}
+  if(lineCh){lineCh.destroy();lineCh=null;}
+  update();
+}
+
+window.addEventListener('resize',function(){if(_user)drawBe();});
+</script>
