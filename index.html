@@ -189,8 +189,9 @@ tr:hover td{background:var(--bg)}
     <div class="hint-box" id="hintDc">安親月收：計算中</div>
     <div class="sf"><div class="sh"><span class="sl">活動或講座月收益</span><span class="sv" id="vEv">$0</span></div>
       <input type="range" min="0" max="200000" step="5000" value="0" oninput="sync('Ev',this.value,v=>'$'+Number(v).toLocaleString())"></div>
-    <div class="sf"><div class="sh"><span class="sl">補助費用／月（政府補助、特殊項目）</span><span class="sv" id="vSub">$0</span></div>
-      <input type="range" min="0" max="100000" step="1000" value="0" oninput="sync('Sub',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="sf"><div class="sh"><span class="sl">補助費用總額（政府補助、特殊項目）</span><span class="sv" id="vSub">$0</span></div>
+      <input type="range" min="0" max="3000000" step="50000" value="0" oninput="sync('Sub',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="hint-box" id="hintSub">月均補助：$0（÷ 簽約年限月數）</div>
   </div>
 </aside>
 
@@ -305,7 +306,8 @@ function amort(){return (V.Ren+V.Eqp)/(V.Yr*12);}
 function annMonth(){return V.Ann/12;}
 function fixed(t){return t*V.Sl+V.Rt+V.Ot+V.Hr+amort()+annMonth();}
 function dcRev(){return V.DcN*V.DcF*Math.round(V.W/5);}
-function otherRev(){return dcRev()+V.Sub+V.Ev;}
+function subMonth(){return V.Sub/(V.Yr*12);}
+function otherRev(){return dcRev()+subMonth()+V.Ev;}
 function fixedEff(t){return Math.max(0,fixed(t)-otherRev());}
 function beCalc(t){return Math.ceil(fixed(t)/V.Rv);}
 function beEffCalc(t){return Math.ceil(fixedEff(t)/V.Rv);}
@@ -551,7 +553,9 @@ function update(){
   S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,fEff:fEff};
 
   el('hintAmort').textContent='月攤提前期費用：$'+fmtN(am)+' /月（裝潢＋道具）';
-  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻/週 × $'+fmtN(V.DcF)+' × '+Math.round(days/5)+'週）'+(V.Ev>0?' ｜ 活動 $'+fmtN(V.Ev):'')+(V.Sub>0?' ｜ 補助 $'+fmtN(V.Sub):'');
+  var sm=subMonth();
+  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻/週 × $'+fmtN(V.DcF)+' × '+Math.round(days/5)+'週）'+(V.Ev>0?' ｜ 活動 $'+fmtN(V.Ev):'')+(sm>0?' ｜ 補助均攤 $'+fmtN(sm)+'/月':'');
+  if(el('hintSub'))el('hintSub').textContent='月均補助：$'+fmtN(sm)+'（$'+fmtN(V.Sub)+' ÷ '+V.Yr+'年 ÷ 12）';
   if(el('hintAnn'))el('hintAnn').textContent='月均年度成本：$'+fmtN(ann)+'（÷12）';
 
   el('ivTotal').textContent='$'+fmtN(totalInvest);
