@@ -206,17 +206,17 @@ tr:hover td{background:var(--bg)}
 
   <!-- invest bar -->
   <div class="invest-bar">
-    <div class="inv-item"><div class="inv-lbl">前期資金需求</div><div class="inv-val" id="ivTotal">—</div><div class="inv-sub">裝潢 + 押金 + 首月租金</div></div>
-    <div class="inv-item"><div class="inv-lbl">月攤提裝潢</div><div class="inv-val" id="ivAmort">—</div><div class="inv-sub" id="ivSub">—</div></div>
+    <div class="inv-item"><div class="inv-lbl">前期資金需求</div><div class="inv-val" id="ivTotal">—</div><div class="inv-sub">裝潢 + 道具 + 押金 + 首月租金</div></div>
+    <div class="inv-item"><div class="inv-lbl">月攤提前期費用</div><div class="inv-val" id="ivAmort">—</div><div class="inv-sub" id="ivSub">—</div></div>
     <div class="inv-item"><div class="inv-lbl">月固定成本合計</div><div class="inv-val" id="ivFixed">—</div><div class="inv-sub">含攤提 + 年度均攤</div></div>
-    <div class="inv-item"><div class="inv-lbl">安親月收貢獻</div><div class="inv-val pos" id="ivDc">—</div><div class="inv-sub">可抵消固定成本</div></div>
+    <div class="inv-item"><div class="inv-lbl">額外月收貢獻</div><div class="inv-val pos" id="ivDc">—</div><div class="inv-sub">安親 + 活動 + 補助均攤</div></div>
   </div>
 
   <!-- daycare strip -->
   <div class="dc-strip">
-    <div class="dcs-item"><div class="dcs-lbl">安親有效固定成本</div><div class="dcs-val" id="dcEffFixed">—</div></div>
-    <div class="dcs-item"><div class="dcs-lbl">含安親訓練損益平衡</div><div class="dcs-val" id="dcBe">—</div></div>
-    <div class="dcs-item"><div class="dcs-lbl">安親降低損益平衡</div><div class="dcs-val pos" id="dcSave">—</div></div>
+    <div class="dcs-item"><div class="dcs-lbl">扣除額外收益後固定成本</div><div class="dcs-val" id="dcEffFixed">—</div></div>
+    <div class="dcs-item"><div class="dcs-lbl">含額外收益損益平衡</div><div class="dcs-val" id="dcBe">—</div></div>
+    <div class="dcs-item"><div class="dcs-lbl">額外收益降低損益平衡</div><div class="dcs-val pos" id="dcSave">—</div></div>
   </div>
 
   <!-- Chart 1: break-even -->
@@ -235,7 +235,7 @@ tr:hover td{background:var(--bg)}
 
   <!-- Chart 3: line with fill -->
   <div class="card">
-    <div class="card-title">月淨利曲線 — 三師 / 四師 / 五師（曲線間填色）</div>
+    <div class="card-title">月淨利曲線 — 二師 / 三師 / 四師 / 五師</div>
     <div class="chart-wrap" style="height:210px"><canvas id="lineChart"></canvas></div>
     <div class="legend" id="lineLeg"></div>
   </div>
@@ -245,7 +245,7 @@ tr:hover td{background:var(--bg)}
     <div class="card-title">情境對照</div>
     <div class="tab-row">
       <button class="tab on" id="tabSc"  onclick="showTab('sc')">低 / 中 / 滿載</button>
-      <button class="tab"    id="tabCmp" onclick="showTab('cmp')">三 / 四 / 五師比較</button>
+      <button class="tab"    id="tabCmp" onclick="showTab('cmp')">二 / 三 / 四 / 五師比較</button>
       <button class="tab"    id="tabTbl" onclick="showTab('tbl')">完整試算表</button>
     </div>
     <div id="panelSc"><div class="sc-grid" id="scGrid"></div></div>
@@ -392,8 +392,9 @@ function drawBe(){
   ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+ph);ctx.lineTo(ml+pw,mt+ph);ctx.stroke();
 
   ctx.save();ctx.beginPath();ctx.rect(ml,mt,pw,ph);ctx.clip();
-  // effective fixed cost line (with daycare)
-  if(S.dcRev>0){
+  // effective fixed cost line (with extra revenue)
+  var orV=S.orV||0;
+  if(orV>0){
     ctx.strokeStyle=p.teal;ctx.lineWidth=1;ctx.setLineDash([4,4]);
     ctx.beginPath();ctx.moveTo(ml,pxY(fEff));ctx.lineTo(ml+pw,pxY(fEff));ctx.stroke();ctx.setLineDash([]);
   }
@@ -406,7 +407,7 @@ function drawBe(){
   for(var i=0;i<=80;i++){var sx=i/80*maxX;if(i===0)ctx.moveTo(pxX(sx),pxY(sx*rv));else ctx.lineTo(pxX(sx),pxY(sx*rv));}
   ctx.stroke();
   // current line
-  var currX=pxX(cs),currY=pxY(cs*rv),inP=(cs*rv+S.dcRev)>fN;
+  var currX=pxX(cs),currY=pxY(cs*rv),inP=(cs*rv+orV)>fN;
   ctx.strokeStyle=d?'rgba(255,255,255,.28)':'rgba(0,0,0,.2)';
   ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
   ctx.beginPath();ctx.moveTo(currX,mt);ctx.lineTo(currX,mt+ph);ctx.stroke();ctx.setLineDash([]);
@@ -431,7 +432,7 @@ function drawBe(){
   el('beLeg').innerHTML=
     '<span><span class="leg-sw" style="background:'+p.blue+'"></span>訓練月收入</span>'+
     '<span><span class="leg-sw" style="background:'+p.red+'"></span>固定成本</span>'+
-    (S.dcRev>0?'<span><span class="leg-sw" style="background:'+p.teal+'"></span>有效成本（含安親收入）</span>':'')+
+    (orV>0?'<span><span class="leg-sw" style="background:'+p.teal+'"></span>有效成本（扣額外收益）</span>':'')+
     '<span style="color:'+p.amber+'">● 損益平衡點</span>';
 }
 
@@ -439,8 +440,8 @@ function drawBe(){
 var BAR_ROWS=[60,80,100,120,140,160,180,200,225,250,300];
 
 function renderBar(){
-  var p=pal(),f=fixed(T),rv=V.Rv,dc=dcRev();
-  var profits=BAR_ROWS.map(function(s){return s*rv+dc-f;});
+  var p=pal(),f=fixed(T),rv=V.Rv,or=otherRev();
+  var profits=BAR_ROWS.map(function(s){return s*rv+or-f;});
   var bgColors=profits.map(function(v){return v>=0?p.blue:p.red;});
 
   if(!barCh){
@@ -481,7 +482,7 @@ function renderBar(){
   el('barLeg').innerHTML=
     '<span><span class="leg-dot" style="background:'+p.blue+'"></span>月淨利（正）</span>'+
     '<span><span class="leg-dot" style="background:'+p.red+'"></span>月虧損（負）</span>'+
-    (dcRev()>0?'<span style="color:'+p.tc+'">已含安親月收 $'+fmtN(dcRev())+'</span>':'');
+    (otherRev()>0?'<span style="color:'+p.tc+'">已含額外月收 $'+fmtN(otherRev())+'</span>':'');
 }
 
 // ── Chart 3: Line with fill ───────────────────────────────────────
@@ -550,7 +551,7 @@ function update(){
   var b2=beCalc(2),b3=beCalc(3),b4=beCalc(4),b3eff=beEffCalc(3);
   var maxCap=T*4*days,totalInvest=V.Ren+V.Eqp+V.Dep*V.Rt+V.Rt;
 
-  S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,fEff:fEff};
+  S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,orV:or,fEff:fEff};
 
   el('hintAmort').textContent='月攤提前期費用：$'+fmtN(am)+' /月（裝潢＋道具）';
   var sm=subMonth();
@@ -560,7 +561,7 @@ function update(){
 
   el('ivTotal').textContent='$'+fmtN(totalInvest);
   el('ivAmort').textContent='$'+fmtN(am)+' /月';
-  el('ivSub').textContent='$'+fmtN(V.Ren)+' ÷ '+V.Yr+'年 ÷ 12';
+  el('ivSub').textContent='$'+fmtN(V.Ren+V.Eqp)+' ÷ '+V.Yr+'年 ÷ 12';
   el('ivFixed').textContent='$'+fmtN(fN);
   el('ivDc').textContent='+ $'+fmtN(or)+' /月';
 
