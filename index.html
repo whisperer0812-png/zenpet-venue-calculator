@@ -104,13 +104,16 @@ tr:hover td{background:var(--bg)}
 .be-row td{background:var(--acc-l)!important;font-weight:600}
 .dim{color:var(--text3)}
 .note{font-size:11px;color:var(--text3);margin-top:.6rem}
-.tr-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:.75rem .9rem;margin-bottom:.6rem}
-.tr-head{display:flex;align-items:center;gap:8px;margin-bottom:.5rem}
+.tr-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);margin-bottom:.6rem;overflow:hidden}
+.tr-head{display:flex;align-items:center;gap:8px;padding:.75rem .9rem;cursor:pointer;user-select:none}
+.tr-head:hover{background:var(--surf2)}
 .tr-name{font-size:12px;font-weight:700;color:var(--text);min-width:54px}
-.tr-type-tog{display:flex;gap:4px;flex:1}
-.tr-type-btn{flex:1;padding:4px 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg);color:var(--text2);font-size:11px;cursor:pointer;font-weight:500;transition:all .12s}
+.tr-cost{font-size:12px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums;flex:1;text-align:right}
+.tr-chev{font-size:12px;color:var(--text3);transition:transform .18s;margin-left:6px}
+.tr-body-wrap{padding:.1rem .9rem .75rem;border-top:1px solid var(--bdr)}
+.tr-type-tog{display:flex;flex-direction:column;gap:6px;margin-bottom:.7rem;margin-top:.55rem}
+.tr-type-btn{padding:7px 12px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg);color:var(--text2);font-size:12px;cursor:pointer;font-weight:500;transition:all .12s;text-align:left}
 .tr-type-btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
-.tr-cost{font-size:11px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
 .tr-body .sf{margin-bottom:.5rem}.tr-body .sf:last-child{margin-bottom:0}
 .tr-tier-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:3px 0 5px;border-bottom:1px dashed var(--bdr);margin-bottom:.4rem}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--bdr)}.kpi-row{grid-template-columns:repeat(2,1fr)}.sc-grid,.cmp2{grid-template-columns:1fr}.invest-bar,.dc-strip{grid-template-columns:1fr 1fr}}
@@ -271,11 +274,11 @@ tr:hover td{background:var(--bg)}
 // ── Auth ─────────────────────────────────────────────────────────
 var ALLOWED=['whisperer0812@gmail.com','sheepeach1227@gmail.com','yoloemilin520@gmail.com'];
 var trainers=[
-  {name:'A',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40},
-  {name:'B',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40},
-  {name:'C',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40},
-  {name:'D',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40},
-  {name:'E',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40}
+  {name:'A',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40,open:false},
+  {name:'B',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40,open:false},
+  {name:'C',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40,open:false},
+  {name:'D',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40,open:false},
+  {name:'E',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40,open:false}
 ];
 var _user=null;
 
@@ -344,6 +347,12 @@ function syncTrainer(i,field,val){
   if(field==='t3'&&el('trT3Val'+i))el('trT3Val'+i).textContent=val+'%';
   update();
 }
+function toggleTrainerCard(i){
+  trainers[i].open=!trainers[i].open;
+  var body=el('trBody'+i),chev=el('trChev'+i);
+  if(body)body.style.display=trainers[i].open?'block':'none';
+  if(chev)chev.style.transform=trainers[i].open?'rotate(180deg)':'rotate(0deg)';
+}
 function setTrainerType(i,type){
   trainers[i].type=type;
   ['fixed','commission'].forEach(function(t){var b=el('trBtn_'+i+'_'+t);if(b)b.classList.toggle('on',t===type);});
@@ -357,28 +366,33 @@ function renderTrainerCards(){
   for(var i=0;i<5;i++){
     var tr=trainers[i],show=i<T;
     html+='<div class="tr-card" id="trCard'+i+'" style="display:'+(show?'block':'none')+'">'+
-      '<div class="tr-head">'+
+      '<div class="tr-head" onclick="toggleTrainerCard('+i+')">'+
         '<span class="tr-name">訓練師&nbsp;'+labels[i]+'</span>'+
-        '<div class="tr-type-tog">'+
-          '<button class="tr-type-btn'+(tr.type==='fixed'?' on':'')+'" id="trBtn_'+i+'_fixed" onclick="setTrainerType('+i+',\'fixed\')">月薪制</button>'+
-          '<button class="tr-type-btn'+(tr.type==='commission'?' on':'')+'" id="trBtn_'+i+'_commission" onclick="setTrainerType('+i+',\'commission\')">底薪抽成</button>'+
-        '</div>'+
         '<span class="tr-cost" id="trCost'+i+'">$'+(V?fmtN(calcOneTrCost(i)):'—')+'</span>'+
+        '<span id="trChev'+i+'" class="tr-chev" style="transform:'+(tr.open?'rotate(180deg)':'rotate(0deg)')+'">▾</span>'+
       '</div>'+
-      '<div id="trFixed'+i+'" style="display:'+(tr.type==='fixed'?'block':'none')+'" class="tr-body">'+
-        '<div class="sf"><div class="sh"><span class="sl">月薪</span><span class="sv" id="trSalVal'+i+'">$'+tr.salary.toLocaleString()+'</span></div>'+
-        '<input type="range" min="20000" max="150000" step="1000" value="'+tr.salary+'" oninput="syncTrainer('+i+',\'salary\',this.value)"></div>'+
-      '</div>'+
-      '<div id="trComm'+i+'" style="display:'+(tr.type==='commission'?'block':'none')+'" class="tr-body">'+
-        '<div class="sf"><div class="sh"><span class="sl">底薪</span><span class="sv" id="trBaseVal'+i+'">$'+tr.base.toLocaleString()+'</span></div>'+
-        '<input type="range" min="0" max="80000" step="1000" value="'+tr.base+'" oninput="syncTrainer('+i+',\'base\',this.value)"></div>'+
-        '<div class="tr-tier-lbl">各堂數區間的每堂抽成 %</div>'+
-        '<div class="sf"><div class="sh"><span class="sl">20–30 堂區間</span><span class="sv" id="trT1Val'+i+'">'+tr.t1+'%</span></div>'+
-        '<input type="range" min="0" max="70" step="1" value="'+tr.t1+'" oninput="syncTrainer('+i+',\'t1\',this.value)"></div>'+
-        '<div class="sf"><div class="sh"><span class="sl">31–40 堂區間</span><span class="sv" id="trT2Val'+i+'">'+tr.t2+'%</span></div>'+
-        '<input type="range" min="0" max="70" step="1" value="'+tr.t2+'" oninput="syncTrainer('+i+',\'t2\',this.value)"></div>'+
-        '<div class="sf"><div class="sh"><span class="sl">41–50 堂區間</span><span class="sv" id="trT3Val'+i+'">'+tr.t3+'%</span></div>'+
-        '<input type="range" min="0" max="70" step="1" value="'+tr.t3+'" oninput="syncTrainer('+i+',\'t3\',this.value)"></div>'+
+      '<div id="trBody'+i+'" style="display:'+(tr.open?'block':'none')+'">'+
+        '<div class="tr-body-wrap">'+
+          '<div class="tr-type-tog">'+
+            '<button class="tr-type-btn'+(tr.type==='fixed'?' on':'')+'" id="trBtn_'+i+'_fixed" onclick="event.stopPropagation();setTrainerType('+i+',\'fixed\')">月薪制</button>'+
+            '<button class="tr-type-btn'+(tr.type==='commission'?' on':'')+'" id="trBtn_'+i+'_commission" onclick="event.stopPropagation();setTrainerType('+i+',\'commission\')">底薪抽成</button>'+
+          '</div>'+
+          '<div id="trFixed'+i+'" style="display:'+(tr.type==='fixed'?'block':'none')+'" class="tr-body">'+
+            '<div class="sf"><div class="sh"><span class="sl">月薪</span><span class="sv" id="trSalVal'+i+'">$'+tr.salary.toLocaleString()+'</span></div>'+
+            '<input type="range" min="20000" max="150000" step="1000" value="'+tr.salary+'" oninput="syncTrainer('+i+',\'salary\',this.value)"></div>'+
+          '</div>'+
+          '<div id="trComm'+i+'" style="display:'+(tr.type==='commission'?'block':'none')+'" class="tr-body">'+
+            '<div class="sf"><div class="sh"><span class="sl">底薪</span><span class="sv" id="trBaseVal'+i+'">$'+tr.base.toLocaleString()+'</span></div>'+
+            '<input type="range" min="0" max="80000" step="1000" value="'+tr.base+'" oninput="syncTrainer('+i+',\'base\',this.value)"></div>'+
+            '<div class="tr-tier-lbl">各堂數區間的每堂抽成 %</div>'+
+            '<div class="sf"><div class="sh"><span class="sl">20–30 堂區間</span><span class="sv" id="trT1Val'+i+'">'+tr.t1+'%</span></div>'+
+            '<input type="range" min="0" max="70" step="1" value="'+tr.t1+'" oninput="syncTrainer('+i+',\'t1\',this.value)"></div>'+
+            '<div class="sf"><div class="sh"><span class="sl">31–40 堂區間</span><span class="sv" id="trT2Val'+i+'">'+tr.t2+'%</span></div>'+
+            '<input type="range" min="0" max="70" step="1" value="'+tr.t2+'" oninput="syncTrainer('+i+',\'t2\',this.value)"></div>'+
+            '<div class="sf"><div class="sh"><span class="sl">41–50 堂區間</span><span class="sv" id="trT3Val'+i+'">'+tr.t3+'%</span></div>'+
+            '<input type="range" min="0" max="70" step="1" value="'+tr.t3+'" oninput="syncTrainer('+i+',\'t3\',this.value)"></div>'+
+          '</div>'+
+        '</div>'+
       '</div>'+
     '</div>';
   }
