@@ -276,7 +276,7 @@ var ALLOWED=['whisperer0812@gmail.com','sheepeach1227@gmail.com','yoloemilin520@
 var trainers=[
   {name:'大廷',type:'fixed',salary:70000,base:25000,t1:35,t2:40,t3:50,open:false},
   {name:'羊桃',type:'fixed',salary:70000,base:25000,t1:35,t2:40,t3:50,open:false},
-  {name:'C',type:'commission',salary:50000,base:25000,t1:35,t2:40,t3:50,open:false},
+  {name:'小褚',type:'commission',salary:50000,base:25000,t1:35,t2:40,t3:50,open:false},
   {name:'D',type:'commission',salary:50000,base:25000,t1:35,t2:40,t3:50,open:false},
   {name:'E',type:'commission',salary:50000,base:25000,t1:35,t2:40,t3:50,open:false}
 ];
@@ -385,7 +385,7 @@ function renderTrainerCards(){
             '<div class="sf"><div class="sh"><span class="sl">底薪</span><span class="sv" id="trBaseVal'+i+'">$'+tr.base.toLocaleString()+'</span></div>'+
             '<input type="range" min="0" max="80000" step="1000" value="'+tr.base+'" oninput="syncTrainer('+i+',\'base\',this.value)"></div>'+
             '<div class="tr-tier-lbl">各堂數區間的每堂抽成 %</div>'+
-            '<div class="sf"><div class="sh"><span class="sl">20–30 堂區間</span><span class="sv" id="trT1Val'+i+'">'+tr.t1+'%</span></div>'+
+            '<div class="sf"><div class="sh"><span class="sl">21–30 堂區間</span><span class="sv" id="trT1Val'+i+'">'+tr.t1+'%</span></div>'+
             '<input type="range" min="0" max="70" step="1" value="'+tr.t1+'" oninput="syncTrainer('+i+',\'t1\',this.value)"></div>'+
             '<div class="sf"><div class="sh"><span class="sl">31–40 堂區間</span><span class="sv" id="trT2Val'+i+'">'+tr.t2+'%</span></div>'+
             '<input type="range" min="0" max="70" step="1" value="'+tr.t2+'" oninput="syncTrainer('+i+',\'t2\',this.value)"></div>'+
