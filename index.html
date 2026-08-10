@@ -274,8 +274,8 @@ tr:hover td{background:var(--bg)}
 // ── Auth ─────────────────────────────────────────────────────────
 var ALLOWED=['whisperer0812@gmail.com','sheepeach1227@gmail.com','yoloemilin520@gmail.com'];
 var trainers=[
-  {name:'A',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40,open:false},
-  {name:'B',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40,open:false},
+  {name:'大廷',type:'fixed',salary:70000,base:25000,t1:35,t2:40,t3:50,open:false},
+  {name:'羊桃',type:'fixed',salary:70000,base:25000,t1:35,t2:40,t3:50,open:false},
   {name:'C',type:'commission',salary:50000,base:25000,t1:35,t2:40,t3:50,open:false},
   {name:'D',type:'commission',salary:50000,base:25000,t1:35,t2:40,t3:50,open:false},
   {name:'E',type:'commission',salary:50000,base:25000,t1:35,t2:40,t3:50,open:false}
@@ -362,12 +362,12 @@ function setTrainerType(i,type){
 }
 function renderTrainerCards(){
   var c=el('trainerCards');if(!c)return;
-  var labels=['A','B','C','D','E'],html='';
+  var html='';
   for(var i=0;i<5;i++){
     var tr=trainers[i],show=i<T;
     html+='<div class="tr-card" id="trCard'+i+'" style="display:'+(show?'block':'none')+'">'+
       '<div class="tr-head" onclick="toggleTrainerCard('+i+')">'+
-        '<span class="tr-name">訓練師&nbsp;'+labels[i]+'</span>'+
+        '<span class="tr-name">訓練師&nbsp;'+tr.name+'</span>'+
         '<span class="tr-cost" id="trCost'+i+'">$'+(V?fmtN(calcOneTrCost(i)):'—')+'</span>'+
         '<span id="trChev'+i+'" class="tr-chev" style="transform:'+(tr.open?'rotate(180deg)':'rotate(0deg)')+'">▾</span>'+
       '</div>'+
