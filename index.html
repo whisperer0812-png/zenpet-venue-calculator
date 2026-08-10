@@ -104,6 +104,15 @@ tr:hover td{background:var(--bg)}
 .be-row td{background:var(--acc-l)!important;font-weight:600}
 .dim{color:var(--text3)}
 .note{font-size:11px;color:var(--text3);margin-top:.6rem}
+.tr-card{background:var(--surf);border:1px solid var(--bdr);border-radius:var(--r);padding:.75rem .9rem;margin-bottom:.6rem}
+.tr-head{display:flex;align-items:center;gap:8px;margin-bottom:.5rem}
+.tr-name{font-size:12px;font-weight:700;color:var(--text);min-width:54px}
+.tr-type-tog{display:flex;gap:4px;flex:1}
+.tr-type-btn{flex:1;padding:4px 6px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg);color:var(--text2);font-size:11px;cursor:pointer;font-weight:500;transition:all .12s}
+.tr-type-btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.tr-cost{font-size:11px;font-weight:600;color:var(--acc);font-variant-numeric:tabular-nums;min-width:70px;text-align:right}
+.tr-body .sf{margin-bottom:.5rem}.tr-body .sf:last-child{margin-bottom:0}
+.tr-tier-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:3px 0 5px;border-bottom:1px dashed var(--bdr);margin-bottom:.4rem}
 @media(max-width:700px){.layout{grid-template-columns:1fr}.sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--bdr)}.kpi-row{grid-template-columns:repeat(2,1fr)}.sc-grid,.cmp2{grid-template-columns:1fr}.invest-bar,.dc-strip{grid-template-columns:1fr 1fr}}
 </style>
 
@@ -153,8 +162,8 @@ tr:hover td{background:var(--bg)}
     <div class="s-lbl">固定月成本</div>
     <div class="sf"><div class="sh"><span class="sl">月租金</span><span class="sv" id="vRt">$150,000</span></div>
       <input type="range" min="30000" max="400000" step="5000" value="150000" oninput="sync('Rt',this.value,v=>'$'+Number(v).toLocaleString())"></div>
-    <div class="sf"><div class="sh"><span class="sl">每位訓練師月薪</span><span class="sv" id="vSl">$70,000</span></div>
-      <input type="range" min="30000" max="150000" step="1000" value="70000" oninput="sync('Sl',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div id="trainerCards"></div>
+    <div class="hint-box" id="hintSalary">月薪資合計：計算中</div>
     <div class="sf"><div class="sh"><span class="sl">其他月成本（水電費...等）</span><span class="sv" id="vOt">$20,000</span></div>
       <input type="range" min="0" max="100000" step="1000" value="20000" oninput="sync('Ot',this.value,v=>'$'+Number(v).toLocaleString())"></div>
     <div class="sf"><div class="sh"><span class="sl">其他人事費</span><span class="sv" id="vHr">$0</span></div>
@@ -261,6 +270,13 @@ tr:hover td{background:var(--bg)}
 <script>
 // ── Auth ─────────────────────────────────────────────────────────
 var ALLOWED=['whisperer0812@gmail.com','sheepeach1227@gmail.com','yoloemilin520@gmail.com'];
+var trainers=[
+  {name:'A',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40},
+  {name:'B',type:'fixed',salary:70000,base:25000,t1:30,t2:35,t3:40},
+  {name:'C',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40},
+  {name:'D',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40},
+  {name:'E',type:'commission',salary:50000,base:25000,t1:30,t2:35,t3:40}
+];
 var _user=null;
 
 function gateLogin(){
@@ -279,6 +295,7 @@ function showApp(){
   document.getElementById('appHeader').style.display='flex';
   document.getElementById('appLayout').style.display='grid';
   document.getElementById('userTag').textContent=_user;
+  renderTrainerCards();
   update();
 }
 
@@ -301,7 +318,74 @@ function pc(n){return n>0?'pos':n<0?'neg':'';}
 function dk(){var th=document.documentElement.dataset.theme;return th==='dark'||(!th&&matchMedia('(prefers-color-scheme:dark)').matches);}
 function amort(){return (V.Ren+V.Eqp)/(V.Yr*12);}
 function annMonth(){return V.Ann/12;}
-function fixed(t){return t*V.Sl+V.Rt+V.Ot+V.Hr+amort()+annMonth();}
+
+// ── Trainer compensation ────────────────────────────────────────────
+function calcOneTrCost(i){
+  if(!V)return 0;
+  var tr=trainers[i];
+  if(tr.type==='fixed')return tr.salary;
+  var spt=Math.round(V.D*V.W),rv=V.Rv,cost=tr.base,s=spt;
+  if(s>20)cost+=(Math.min(s,30)-20)*rv*tr.t1/100;
+  if(s>30)cost+=(Math.min(s,40)-30)*rv*tr.t2/100;
+  if(s>40)cost+=(Math.min(s,50)-40)*rv*tr.t3/100;
+  return cost;
+}
+function trainerCost(n){
+  var total=0;
+  for(var i=0;i<Math.min(n,5);i++)total+=calcOneTrCost(i);
+  return total;
+}
+function syncTrainer(i,field,val){
+  trainers[i][field]=Number(val);
+  if(field==='salary'&&el('trSalVal'+i))el('trSalVal'+i).textContent='$'+Number(val).toLocaleString();
+  if(field==='base'&&el('trBaseVal'+i))el('trBaseVal'+i).textContent='$'+Number(val).toLocaleString();
+  if(field==='t1'&&el('trT1Val'+i))el('trT1Val'+i).textContent=val+'%';
+  if(field==='t2'&&el('trT2Val'+i))el('trT2Val'+i).textContent=val+'%';
+  if(field==='t3'&&el('trT3Val'+i))el('trT3Val'+i).textContent=val+'%';
+  update();
+}
+function setTrainerType(i,type){
+  trainers[i].type=type;
+  ['fixed','commission'].forEach(function(t){var b=el('trBtn_'+i+'_'+t);if(b)b.classList.toggle('on',t===type);});
+  if(el('trFixed'+i))el('trFixed'+i).style.display=type==='fixed'?'block':'none';
+  if(el('trComm'+i))el('trComm'+i).style.display=type==='commission'?'block':'none';
+  update();
+}
+function renderTrainerCards(){
+  var c=el('trainerCards');if(!c)return;
+  var labels=['A','B','C','D','E'],html='';
+  for(var i=0;i<5;i++){
+    var tr=trainers[i],show=i<T;
+    html+='<div class="tr-card" id="trCard'+i+'" style="display:'+(show?'block':'none')+'">'+
+      '<div class="tr-head">'+
+        '<span class="tr-name">訓練師&nbsp;'+labels[i]+'</span>'+
+        '<div class="tr-type-tog">'+
+          '<button class="tr-type-btn'+(tr.type==='fixed'?' on':'')+'" id="trBtn_'+i+'_fixed" onclick="setTrainerType('+i+',\'fixed\')">月薪制</button>'+
+          '<button class="tr-type-btn'+(tr.type==='commission'?' on':'')+'" id="trBtn_'+i+'_commission" onclick="setTrainerType('+i+',\'commission\')">底薪抽成</button>'+
+        '</div>'+
+        '<span class="tr-cost" id="trCost'+i+'">$'+(V?fmtN(calcOneTrCost(i)):'—')+'</span>'+
+      '</div>'+
+      '<div id="trFixed'+i+'" style="display:'+(tr.type==='fixed'?'block':'none')+'" class="tr-body">'+
+        '<div class="sf"><div class="sh"><span class="sl">月薪</span><span class="sv" id="trSalVal'+i+'">$'+tr.salary.toLocaleString()+'</span></div>'+
+        '<input type="range" min="20000" max="150000" step="1000" value="'+tr.salary+'" oninput="syncTrainer('+i+',\'salary\',this.value)"></div>'+
+      '</div>'+
+      '<div id="trComm'+i+'" style="display:'+(tr.type==='commission'?'block':'none')+'" class="tr-body">'+
+        '<div class="sf"><div class="sh"><span class="sl">底薪</span><span class="sv" id="trBaseVal'+i+'">$'+tr.base.toLocaleString()+'</span></div>'+
+        '<input type="range" min="0" max="80000" step="1000" value="'+tr.base+'" oninput="syncTrainer('+i+',\'base\',this.value)"></div>'+
+        '<div class="tr-tier-lbl">各堂數區間的每堂抽成 %</div>'+
+        '<div class="sf"><div class="sh"><span class="sl">20–30 堂區間</span><span class="sv" id="trT1Val'+i+'">'+tr.t1+'%</span></div>'+
+        '<input type="range" min="0" max="70" step="1" value="'+tr.t1+'" oninput="syncTrainer('+i+',\'t1\',this.value)"></div>'+
+        '<div class="sf"><div class="sh"><span class="sl">31–40 堂區間</span><span class="sv" id="trT2Val'+i+'">'+tr.t2+'%</span></div>'+
+        '<input type="range" min="0" max="70" step="1" value="'+tr.t2+'" oninput="syncTrainer('+i+',\'t2\',this.value)"></div>'+
+        '<div class="sf"><div class="sh"><span class="sl">41–50 堂區間</span><span class="sv" id="trT3Val'+i+'">'+tr.t3+'%</span></div>'+
+        '<input type="range" min="0" max="70" step="1" value="'+tr.t3+'" oninput="syncTrainer('+i+',\'t3\',this.value)"></div>'+
+      '</div>'+
+    '</div>';
+  }
+  c.innerHTML=html;
+}
+
+function fixed(t){return trainerCost(t)+V.Rt+V.Ot+V.Hr+amort()+annMonth();}
 function dcRev(){return V.DcN*V.DcF*Math.round(V.W/5);}
 function subMonth(){return V.Sub/(V.Yr*12);}
 function otherRev(){return dcRev()+subMonth()+V.Ev;}
@@ -315,7 +399,7 @@ function sync(key,val,fmtFn){
   if(key==='Ann')el('hintAnn').textContent='月均年度成本：$'+fmtN(V.Ann/12)+'（÷12）';
   update();
 }
-function setT(n){T=n;[2,3,4,5].forEach(function(i){el('btn'+i).classList.toggle('on',n===i);});update();}
+function setT(n){T=n;[2,3,4,5].forEach(function(i){el('btn'+i).classList.toggle('on',n===i);});[0,1,2,3,4].forEach(function(i){var c=el('trCard'+i);if(c)c.style.display=i<n?'block':'none';});update();}
 
 // ── Palette (ZenPet) ─────────────────────────────────────────────
 function pal(){
@@ -551,6 +635,9 @@ function update(){
   S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,orV:or,fEff:fEff};
 
   el('hintAmort').textContent='月攤提前期費用：$'+fmtN(am)+' /月（裝潢＋道具）';
+  var totalSal=trainerCost(T);
+  if(el('hintSalary'))el('hintSalary').textContent='月薪資合計：$'+fmtN(totalSal)+'（'+T+' 位訓練師）';
+  [0,1,2,3,4].forEach(function(i){var c=el('trCost'+i);if(c)c.textContent='$'+fmtN(calcOneTrCost(i));});
   var sm=subMonth();
   el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻/週 × $'+fmtN(V.DcF)+' × '+Math.round(days/5)+'週）'+(V.Ev>0?' ｜ 活動 $'+fmtN(V.Ev):'')+(sm>0?' ｜ 補助均攤 $'+fmtN(sm)+'/月':'');
   if(el('hintSub'))el('hintSub').textContent='月均補助：$'+fmtN(sm)+'（$'+fmtN(V.Sub)+' ÷ '+V.Yr+'年 ÷ 12）';
