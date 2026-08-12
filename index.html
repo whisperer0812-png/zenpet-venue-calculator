@@ -358,8 +358,8 @@ function trainerCostRaw(n){
 }
 function syncTrainer(i,field,val){
   trainers[i][field]=Number(val);
-  if(field==='salary'&&el('trSalVal'+i))el('trSalVal'+i).textContent='$'+Number(val).toLocaleString()+'（$'+Math.round(Number(val)*LABOR).toLocaleString()+'）';
-  if(field==='base'&&el('trBaseVal'+i))el('trBaseVal'+i).textContent='$'+Number(val).toLocaleString()+'（$'+Math.round(Number(val)*LABOR).toLocaleString()+'）';
+  if(field==='salary'&&el('trSalVal'+i))el('trSalVal'+i).textContent='$'+Number(val).toLocaleString()+'（成本$'+Math.round(Number(val)*LABOR).toLocaleString()+'）';
+  if(field==='base'&&el('trBaseVal'+i))el('trBaseVal'+i).textContent='$'+Number(val).toLocaleString()+'（成本$'+Math.round(Number(val)*LABOR).toLocaleString()+'）';
   if(field==='t2'&&el('trT2Val'+i))el('trT2Val'+i).textContent=val+'%';
   if(field==='t3'&&el('trT3Val'+i))el('trT3Val'+i).textContent=val+'%';
   if(field==='t4'&&el('trT4Val'+i))el('trT4Val'+i).textContent=val+'%';
@@ -396,11 +396,11 @@ function renderTrainerCards(){
             '<button class="tr-type-btn'+(tr.type==='commission'?' on':'')+'" id="trBtn_'+i+'_commission" onclick="event.stopPropagation();setTrainerType('+i+',\'commission\')">底薪抽成</button>'+
           '</div>'+
           '<div id="trFixed'+i+'" style="display:'+(tr.type==='fixed'?'block':'none')+'" class="tr-body">'+
-            '<div class="sf"><div class="sh"><span class="sl">月薪</span><span class="sv" id="trSalVal'+i+'">'+'$'+tr.salary.toLocaleString()+'（$'+Math.round(tr.salary*LABOR).toLocaleString()+'）</span></div>'+
+            '<div class="sf"><div class="sh"><span class="sl">月薪</span><span class="sv" id="trSalVal'+i+'">'+'$'+tr.salary.toLocaleString()+'（成本$'+Math.round(tr.salary*LABOR).toLocaleString()+'）</span></div>'+
             '<input type="range" min="20000" max="150000" step="1000" value="'+tr.salary+'" oninput="syncTrainer('+i+',\'salary\',this.value)"></div>'+
           '</div>'+
           '<div id="trComm'+i+'" style="display:'+(tr.type==='commission'?'block':'none')+'" class="tr-body">'+
-            '<div class="sf"><div class="sh"><span class="sl">底薪</span><span class="sv" id="trBaseVal'+i+'">'+'$'+tr.base.toLocaleString()+'（$'+Math.round(tr.base*LABOR).toLocaleString()+'）</span></div>'+
+            '<div class="sf"><div class="sh"><span class="sl">底薪</span><span class="sv" id="trBaseVal'+i+'">'+'$'+tr.base.toLocaleString()+'（成本$'+Math.round(tr.base*LABOR).toLocaleString()+'）</span></div>'+
             '<input type="range" min="0" max="80000" step="1000" value="'+tr.base+'" oninput="syncTrainer('+i+',\'base\',this.value)"></div>'+
             '<div class="tr-tier-lbl">各堂數區間的每堂抽成 %（1–30堂無抽成）</div>'+
             '<div class="sf"><div class="sh"><span class="sl">31–40 堂區間</span><span class="sv" id="trT2Val'+i+'">'+tr.t2+'%</span></div>'+
