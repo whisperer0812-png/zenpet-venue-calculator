@@ -341,6 +341,21 @@ function trainerCost(n){
   for(var i=0;i<Math.min(n,5);i++)total+=calcOneTrCost(i);
   return total;
 }
+function calcOneTrCostRaw(i){
+  if(!V)return 0;
+  var tr=trainers[i];
+  if(tr.type==='fixed')return tr.salary;
+  var spt=Math.round(V.D*V.W),rv=V.Rv,cost=tr.base,s=spt;
+  if(s>20)cost+=(Math.min(s,30)-20)*rv*tr.t1/100;
+  if(s>30)cost+=(Math.min(s,40)-30)*rv*tr.t2/100;
+  if(s>40)cost+=(Math.min(s,50)-40)*rv*tr.t3/100;
+  return cost;
+}
+function trainerCostRaw(n){
+  var total=0;
+  for(var i=0;i<Math.min(n,5);i++)total+=calcOneTrCostRaw(i);
+  return total;
+}
 function syncTrainer(i,field,val){
   trainers[i][field]=Number(val);
   if(field==='salary'&&el('trSalVal'+i))el('trSalVal'+i).textContent='$'+Number(val).toLocaleString();
@@ -371,7 +386,7 @@ function renderTrainerCards(){
     html+='<div class="tr-card" id="trCard'+i+'" style="display:'+(show?'block':'none')+'">'+
       '<div class="tr-head" onclick="toggleTrainerCard('+i+')">'+
         '<span class="tr-name">訓練師&nbsp;'+tr.name+'</span>'+
-        '<span class="tr-cost" id="trCost'+i+'">$'+(V?fmtN(calcOneTrCost(i)):'—')+'</span>'+
+        '<span class="tr-cost" id="trCost'+i+'">'+(V?'$'+fmtN(calcOneTrCost(i))+'（原$'+fmtN(calcOneTrCostRaw(i))+'）':'—')+'</span>'+
         '<span id="trChev'+i+'" class="tr-chev" style="transform:'+(tr.open?'rotate(180deg)':'rotate(0deg)')+'">▾</span>'+
       '</div>'+
       '<div id="trBody'+i+'" style="display:'+(tr.open?'block':'none')+'">'+
@@ -652,10 +667,10 @@ function update(){
   S={fN:fN,Rv:rv,sessions:sessions,beN:beN,beEff:beEff,dcRev:dc,orV:or,fEff:fEff};
 
   el('hintAmort').textContent='月攤提前期費用：$'+fmtN(am)+' /月（裝潢＋道具）';
-  var totalSal=trainerCost(T);
-  if(el('hintSalary'))el('hintSalary').textContent='月薪資合計：$'+fmtN(totalSal)+'（×1.2 含勞健保，'+T+' 位）';
-  if(el('hintRv'))el('hintRv').textContent='實收：$'+fmtN(effRv())+' /堂（×0.9 稅後）';
-  [0,1,2,3,4].forEach(function(i){var c=el('trCost'+i);if(c)c.textContent='$'+fmtN(calcOneTrCost(i));});
+  var totalSal=trainerCost(T),totalSalRaw=trainerCostRaw(T);
+  if(el('hintSalary'))el('hintSalary').textContent='月薪資合計：$'+fmtN(totalSal)+'（原$'+fmtN(totalSalRaw)+'，×1.2 含勞健保，'+T+' 位）';
+  if(el('hintRv'))el('hintRv').textContent='實收：$'+fmtN(effRv())+' /堂（原$'+fmtN(V.Rv)+'，×0.9 稅後）';
+  [0,1,2,3,4].forEach(function(i){var c=el('trCost'+i);if(c)c.textContent='$'+fmtN(calcOneTrCost(i))+'（原$'+fmtN(calcOneTrCostRaw(i))+'）';});
   var sm=subMonth();
   el('hintDc').textContent='安親月收：$'+fmtN(dc*TAX)+'（稅前$'+fmtN(dc)+' ×0.9）'+(V.Ev>0?' ｜ 活動 $'+fmtN(V.Ev*TAX):'')+(sm>0?' ｜ 補助均攤 $'+fmtN(sm*TAX)+'/月':'');
   if(el('hintSub'))el('hintSub').textContent='月均補助：$'+fmtN(sm)+'（$'+fmtN(V.Sub)+' ÷ '+V.Yr+'年 ÷ 12）';
@@ -664,7 +679,8 @@ function update(){
   el('ivTotal').textContent='$'+fmtN(totalInvest);
   el('ivAmort').textContent='$'+fmtN(am)+' /月';
   el('ivSub').textContent='$'+fmtN(V.Ren+V.Eqp)+' ÷ '+V.Yr+'年 ÷ 12';
-  el('ivFixed').textContent='$'+fmtN(fN);
+  var rawFixed=trainerCostRaw(T)+V.Rt+V.Ot+V.Hr+amort()+annMonth();
+  el('ivFixed').textContent='$'+fmtN(fN)+'（原$'+fmtN(rawFixed)+'）';
   el('ivDc').textContent='+ $'+fmtN(or)+' /月';
 
   el('dcEffFixed').textContent='$'+fmtN(fEff)+' /月';
@@ -674,7 +690,8 @@ function update(){
 
   el('kBe').textContent=beN+' 堂';el('kBeS').textContent='含額外收益後僅需 '+beEff+' 堂';
   el('kPr').textContent=fmtP(prf);el('kPr').className='kpi-val '+pc(prf);
-  el('kPrS').textContent='訓練 $'+fmtN(revenue)+' + 額外 $'+fmtN(or);
+  var rawRevenue=sessions*V.Rv;
+  el('kPrS').textContent='訓練 $'+fmtN(revenue)+'（原$'+fmtN(rawRevenue)+'）+ 額外 $'+fmtN(or);
   if(prf>0){
     var rec=Math.ceil(totalInvest/prf);
     el('kRec').textContent=rec+' 個月';el('kRec').className='kpi-val '+(rec<=36?'pos':rec<=60?'warn':'neg');
