@@ -159,6 +159,7 @@ tr:hover td{background:var(--bg)}
       <input type="range" min="15" max="30" step="1" value="22" oninput="sync('W',this.value,v=>v+' 天')"></div>
     <div class="sf"><div class="sh"><span class="sl">每堂收費</span><span class="sv" id="vRv">$3,500</span></div>
       <input type="range" min="500" max="10000" step="100" value="3500" oninput="sync('Rv',this.value,v=>'$'+Number(v).toLocaleString())"></div>
+    <div class="hint-box" id="hintRv">實收：$3,150 /堂（×0.9 稅後）</div>
   </div>
 
   <div class="s-sec">
@@ -321,17 +322,19 @@ function pc(n){return n>0?'pos':n<0?'neg':'';}
 function dk(){var th=document.documentElement.dataset.theme;return th==='dark'||(!th&&matchMedia('(prefers-color-scheme:dark)').matches);}
 function amort(){return (V.Ren+V.Eqp)/(V.Yr*12);}
 function annMonth(){return V.Ann/12;}
+var TAX=0.9,LABOR=1.2;
+function effRv(){return V.Rv*TAX;}
 
 // ── Trainer compensation ────────────────────────────────────────────
 function calcOneTrCost(i){
   if(!V)return 0;
   var tr=trainers[i];
-  if(tr.type==='fixed')return tr.salary;
+  if(tr.type==='fixed')return tr.salary*LABOR;
   var spt=Math.round(V.D*V.W),rv=V.Rv,cost=tr.base,s=spt;
   if(s>20)cost+=(Math.min(s,30)-20)*rv*tr.t1/100;
   if(s>30)cost+=(Math.min(s,40)-30)*rv*tr.t2/100;
   if(s>40)cost+=(Math.min(s,50)-40)*rv*tr.t3/100;
-  return cost;
+  return cost*LABOR;
 }
 function trainerCost(n){
   var total=0;
@@ -402,10 +405,10 @@ function renderTrainerCards(){
 function fixed(t){return trainerCost(t)+V.Rt+V.Ot+V.Hr+amort()+annMonth();}
 function dcRev(){return V.DcN*V.DcF*Math.round(V.W/5);}
 function subMonth(){return V.Sub/(V.Yr*12);}
-function otherRev(){return dcRev()+subMonth()+V.Ev;}
+function otherRev(){return (dcRev()+subMonth()+V.Ev)*TAX;}
 function fixedEff(t){return Math.max(0,fixed(t)-otherRev());}
-function beCalc(t){return Math.ceil(fixed(t)/V.Rv);}
-function beEffCalc(t){return Math.ceil(fixedEff(t)/V.Rv);}
+function beCalc(t){return Math.ceil(fixed(t)/effRv());}
+function beEffCalc(t){return Math.ceil(fixedEff(t)/effRv());}
 
 function sync(key,val,fmtFn){
   V[key]=parseFloat(val);
@@ -535,7 +538,7 @@ function drawBe(){
 var BAR_ROWS=[60,80,100,120,140,160,180,200,225,250,300];
 
 function renderBar(){
-  var p=pal(),f=fixed(T),rv=V.Rv,or=otherRev();
+  var p=pal(),f=fixed(T),rv=effRv(),or=otherRev();
   var profits=BAR_ROWS.map(function(s){return s*rv+or-f;});
   var bgColors=profits.map(function(v){return v>=0?p.blue:p.red;});
 
@@ -584,7 +587,7 @@ function renderBar(){
 var LINE_ROWS=[80,100,120,140,160,176,198,220,264,300,352];
 
 function renderLine(){
-  var p=pal(),f2=fixed(2),f3=fixed(3),f4=fixed(4),f5=fixed(5),rv=V.Rv,or=otherRev();
+  var p=pal(),f2=fixed(2),f3=fixed(3),f4=fixed(4),f5=fixed(5),rv=effRv(),or=otherRev();
   var pd2=LINE_ROWS.map(function(s){return s*rv+or-f2;});
   var pd3=LINE_ROWS.map(function(s){return s*rv+or-f3;});
   var pd4=LINE_ROWS.map(function(s){return s*rv+or-f4;});
@@ -638,7 +641,7 @@ function renderLine(){
 // ── Main update ───────────────────────────────────────────────────
 function update(){
   if(!_user)return;
-  var rv=V.Rv,days=V.W,perDay=V.D;
+  var rv=effRv(),days=V.W,perDay=V.D;
   var am=amort(),ann=annMonth(),fN=fixed(T),f3=fixed(3),f4=fixed(4),f5=fixed(5),f2=fixed(2);
   var dc=dcRev(),or=otherRev(),fEff=fixedEff(T),beN=beCalc(T),beEff=beEffCalc(T);
   var sessions=Math.round(T*perDay*days);
@@ -650,10 +653,11 @@ function update(){
 
   el('hintAmort').textContent='月攤提前期費用：$'+fmtN(am)+' /月（裝潢＋道具）';
   var totalSal=trainerCost(T);
-  if(el('hintSalary'))el('hintSalary').textContent='月薪資合計：$'+fmtN(totalSal)+'（'+T+' 位訓練師）';
+  if(el('hintSalary'))el('hintSalary').textContent='月薪資合計：$'+fmtN(totalSal)+'（×1.2 含勞健保，'+T+' 位）';
+  if(el('hintRv'))el('hintRv').textContent='實收：$'+fmtN(effRv())+' /堂（×0.9 稅後）';
   [0,1,2,3,4].forEach(function(i){var c=el('trCost'+i);if(c)c.textContent='$'+fmtN(calcOneTrCost(i));});
   var sm=subMonth();
-  el('hintDc').textContent='安親月收：$'+fmtN(dc)+'（'+V.DcN+'隻/週 × $'+fmtN(V.DcF)+' × '+Math.round(days/5)+'週）'+(V.Ev>0?' ｜ 活動 $'+fmtN(V.Ev):'')+(sm>0?' ｜ 補助均攤 $'+fmtN(sm)+'/月':'');
+  el('hintDc').textContent='安親月收：$'+fmtN(dc*TAX)+'（稅前$'+fmtN(dc)+' ×0.9）'+(V.Ev>0?' ｜ 活動 $'+fmtN(V.Ev*TAX):'')+(sm>0?' ｜ 補助均攤 $'+fmtN(sm*TAX)+'/月':'');
   if(el('hintSub'))el('hintSub').textContent='月均補助：$'+fmtN(sm)+'（$'+fmtN(V.Sub)+' ÷ '+V.Yr+'年 ÷ 12）';
   if(el('hintAnn'))el('hintAnn').textContent='月均年度成本：$'+fmtN(ann)+'（÷12）';
 
